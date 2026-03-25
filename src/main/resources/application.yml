@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: mission-control-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/${POSTGRESQL_DATABASE_NAME}
+    username: ${POSTGRESQL_USERNAME}
+    password: ${POSTGRESQL_PASSWORD}
+    hikari:
+      maximum-pool-size: ${POSTGRES_CONNECT_POOL_SIZE:2}
+      minimum-idle: ${POSTGRES_CONNECT_MIN_IDLE:1}
+      idle-timeout: ${POSTGRES_CONNECT_IDLE_TIMEOUT:600000}
+      max-lifetime: ${POSTGRES_CONNECT_MAX_LIFETIME:1800000}
+      connection-timeout: ${POSTGRES_CONNECT_CONNECT_TIMEOUT:10000}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+management:
+  endpoint:
+    health:
+      show-details: ALWAYS
+    prometheus:
+      enabled: true
+  endpoints:
+    web:
+      base-path: /manage
+      exposure:
+        include: "configprops,env,health,httptrace,metrics,info,prometheus"
+logging:
+  level:
+    root: INFO
+    com.gambit.labs.mission.control: TRACE
+
+server:
+  max-http-request-header-size: 8096

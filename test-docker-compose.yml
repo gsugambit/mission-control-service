@@ -1,0 +1,23 @@
+services:
+  migrations:
+    image: flyway/flyway:10
+    command:
+      -url=jdbc:postgresql://db/mission_control -locations=filesystem:/dbscripts -schemas=public -user=postgres -password=admin -connectRetries=60 migrate
+    volumes:
+      - .:/dbscripts
+    depends_on:
+      - db
+
+  db:
+    image: postgres:17
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=mission_control
+    volumes:
+      - data:/var/lib/postgresql/data
+
+volumes:
+  data: { }

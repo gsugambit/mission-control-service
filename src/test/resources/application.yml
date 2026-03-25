@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: mission-control-service-test
+logging:
+  level:
+    root: INFO
+    com.gambit.labs.mission.control: TRACE
