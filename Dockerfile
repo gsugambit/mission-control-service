@@ -1,73 +1,42 @@
-FROM eclipse-temurin:21.0.10_7-jdk AS test
+# syntax=docker/dockerfile:1
 
-# 1. Language/Locale Settings
-ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8'
-
-ENV TZ=Etc/UTC
-ENV DEBIAN_FRONTEND=noninteractive
-
+# 1. Base stage for shared configuration
+FROM eclipse-temurin:21.0.10_7-jdk AS base
+ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8' \
+    TZ=Etc/UTC \
+    DEBIAN_FRONTEND=noninteractive
+    
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    findutils \
-    tzdata \
-    && rm -rf /var/lib/apt/lists/*
+    apt-get install -y --no-install-recommends findutils tzdata && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-ARG GIT_BRANCH
+# 2. Dependencies stage (to cache downloaded jars)
+FROM base AS deps
+COPY gradlew .
+COPY gradle gradle
+COPY build.gradle settings.gradle ./
+# Use a mount cache for the gradle home to persist downloads
+RUN --mount=type=cache,target=/root/.gradle \
+    ./gradlew help --no-daemon
+
+# 3. Builder stage
+FROM deps AS builder
 ARG IMAGE_TAG
+COPY . .
+# Use mount caches for both the gradle home and the build output
+RUN --mount=type=cache,target=/root/.gradle \
+    ./gradlew bootJar -Pversion=${IMAGE_TAG} --stacktrace -x test --no-daemon
 
-COPY ./  /app
-
-RUN ./gradlew test --stacktrace
-
-FROM eclipse-temurin:21.0.10_7-jdk AS builder
-
-# 1. Language/Locale Settings
-ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8'
-
-ENV TZ=Etc/UTC
-ENV DEBIAN_FRONTEND=noninteractive
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    findutils \
-    tzdata \
-    && rm -rf /var/lib/apt/lists/* \
-
-WORKDIR /app
-
-ARG GIT_BRANCH
-ARG IMAGE_TAG
-
-COPY . /app
-
-RUN ./gradlew bootJar -Pversion=${IMAGE_TAG} --stacktrace -x test
-
-FROM eclipse-temurin:21.0.10_7-jdk AS build
+# 4. Final runtime stage
+FROM base AS build
 ENV PORT=8080
 EXPOSE 8080
 
-# 1. Language/Locale Settings
-ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8'
-
-ENV TZ=Etc/UTC
-ENV DEBIAN_FRONTEND=noninteractive
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    findutils \
-    tzdata \
-    && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /app
 COPY --from=builder /app/build/libs/*.jar /app/app.jar
 
-LABEL org.opencontainers.image.title="Base JDK 21 Runner"
-LABEL org.opencontainers.image.description="Eclipse Temurin 21 JDK, findutils, UTC Timezone"
+LABEL org.opencontainers.image.title="Mission Control Service"
 LABEL org.opencontainers.image.vendor="Gambit Labs"
-LABEL org.opencontainers.image.base.name="eclipse-temurin:21.0.8_9-jdk"
-LABEL org.opencontainers.image.version="21.0.10_7-v1"
-LABEL org.opencontainers.image.authors="GSUGambit <gsugambit@gsugambit.com>"
 
-CMD exec java ${JAVA_USER_OPTS} -jar app.jar
+CMD ["java", "-jar", "app.jar"]
