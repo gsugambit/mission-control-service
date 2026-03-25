@@ -1,0 +1,25 @@
+# Gradle build outputs
+build/
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar
+
+# IDE and Editor files
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+.vscode/
+.DS_Store
+
+# Version control
+.git
+.gitignore
+
+# Docker files
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Documentation and other non-build assets
+*.md
