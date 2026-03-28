@@ -88,3 +88,7 @@ As new endpoints are created, place a reference to them in corresponding section
 - Use `@Slf4j` annotation from Lombok for logging to avoid boilerplate code with Logger instances.
 - lombok.config changes logger name to LOGGER
 - Log at appropriate levels: `DEBUG`, `INFO`, `WARN`, `ERROR`.
+
+## Tests
+After any code changes, run all tests and ensure none fail
+`./gradlew test`

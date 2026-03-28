@@ -26,6 +26,7 @@ This document lists the available REST endpoints and their data structures for t
 - `assignedUserId`: UUID - ID of the user assigned to this task.
 - `status`: MissionStatus - Current status of the task.
 - `blockedReason`: String - Reason why the task is blocked (if status is BLOCKED).
+- `name`: String - Name of the task.
 - `description`: String - Description of what needs to be done.
 - `acceptanceCriteria`: String - Criteria for task completion.
 - `dateCreated`: Instant - Timestamp when the task was created.
@@ -52,6 +53,18 @@ Endpoints for managing users in the system.
     - Required: `userName`
 - **Output**: `UserDto` (JSON)
 - **Description**: Creates a new user in the system.
+
+### Get All Users
+- **Path**: `GET /api/mission-control/v1/users`
+- **Input**: None
+- **Output**: `List<UserDto>` (JSON)
+- **Description**: Retrieves all users in the system.
+
+### Delete User
+- **Path**: `DELETE /api/mission-control/v1/users/{id}`
+- **Input**: `id` (Path variable, UUID)
+- **Output**: None (HTTP 204 No Content)
+- **Description**: Deletes a user. Fails with 409 if the user is assigned to any project or task.
 
 ---
 
@@ -125,7 +138,7 @@ Endpoints for managing tasks within projects.
 ### Create Task
 - **Path**: `POST /api/mission-control/v1/tasks`
 - **Input**: `TaskDto` (JSON)
-    - Required: `projectId`, `description`
+    - Required: `projectId`, `name`, `description`
     - Optional: `acceptanceCriteria`
 - **Output**: `TaskDto` (JSON)
 - **Description**: Creates a new task within a project.
@@ -148,7 +161,7 @@ Endpoints for managing tasks within projects.
     - `id`: Path variable (UUID)
     - `TaskDto`: Request body (JSON)
 - **Output**: `TaskDto` (JSON)
-- **Description**: Updates an existing task's description and acceptance criteria.
+- **Description**: Updates an existing task's name, description and acceptance criteria.
 
 ### Delete Task
 - **Path**: `DELETE /api/mission-control/v1/tasks/{id}`

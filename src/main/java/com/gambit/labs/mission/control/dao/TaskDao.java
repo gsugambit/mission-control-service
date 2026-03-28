@@ -56,6 +56,9 @@ public class TaskDao {
     @Column(name = "blocked_reason")
     private String blockedReason;
 
+    @Column(name = "name", nullable = false)
+    private String name;
+
     @Column(name = "description")
     private String description;
 

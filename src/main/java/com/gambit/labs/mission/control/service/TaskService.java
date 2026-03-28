@@ -47,6 +47,7 @@ public class TaskService {
                 .withAssignedUser(assignedUser)
                 .withStatus(status)
                 .withBlockedReason(taskDto.getBlockedReason())
+                .withName(taskDto.getName())
                 .withDescription(taskDto.getDescription())
                 .withAcceptanceCriteria(taskDto.getAcceptanceCriteria())
                 .build();
@@ -79,6 +80,16 @@ public class TaskService {
             validateBlockedReason(taskDto.getStatus(), taskDto.getBlockedReason());
             updateStatusAndBlockedReason(taskDao, taskDto.getStatus(), taskDto.getBlockedReason());
         }
+
+        if (taskDto.getAssignedUserId() != null) {
+            final UserDao assignedUser = userRepository.findById(taskDto.getAssignedUserId())
+                    .orElseThrow(() -> new NotFoundException("User not found with id: " + taskDto.getAssignedUserId()));
+            taskDao.setAssignedUser(assignedUser);
+        } else {
+            taskDao.setAssignedUser(null);
+        }
+
+        taskDao.setName(taskDto.getName());
         taskDao.setDescription(taskDto.getDescription());
         taskDao.setAcceptanceCriteria(taskDto.getAcceptanceCriteria());
 
@@ -137,6 +148,7 @@ public class TaskService {
                 .withAssignedUserId(taskDao.getAssignedUser() != null ? taskDao.getAssignedUser().getId() : null)
                 .withStatus(taskDao.getStatus())
                 .withBlockedReason(taskDao.getBlockedReason())
+                .withName(taskDao.getName())
                 .withDescription(taskDao.getDescription())
                 .withAcceptanceCriteria(taskDao.getAcceptanceCriteria())
                 .withDateCreated(taskDao.getDateCreated())
