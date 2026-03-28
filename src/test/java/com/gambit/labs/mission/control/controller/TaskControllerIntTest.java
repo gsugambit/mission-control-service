@@ -16,6 +16,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class TaskControllerIntTest extends IntegrationTestBase {
@@ -24,7 +25,7 @@ public class TaskControllerIntTest extends IntegrationTestBase {
     void task_lifecycle_ok() throws Exception {
         // 1. Create Project (Tasks need a project)
         final ProjectDto projectDto = ProjectDto.builder()
-                .withName("Project for Task")
+                .withName("Project for Task " + UUID.randomUUID())
                 .build();
         
         final String projectResponse = mockMvc.perform(post("/api/mission-control/v1/projects")
@@ -38,6 +39,7 @@ public class TaskControllerIntTest extends IntegrationTestBase {
         // 2. Create Task
         final TaskDto taskDto = TaskDto.builder()
                 .withProjectId(createdProject.getId())
+                .withName("Test Task Name")
                 .withDescription("Test Task")
                 .withStatus(MissionStatus.BACKLOG)
                 .build();
@@ -61,6 +63,7 @@ public class TaskControllerIntTest extends IntegrationTestBase {
     void create_task_without_project_fails() throws Exception {
         final TaskDto taskDto = TaskDto.builder()
                 .withProjectId(UUID.randomUUID())
+                .withName("Orphan Task Name")
                 .withDescription("Orphan Task")
                 .build();
 
@@ -73,7 +76,7 @@ public class TaskControllerIntTest extends IntegrationTestBase {
     @Test
     void assign_user_to_task_ok() throws Exception {
         // 1. Create Project
-        final ProjectDto projectDto = ProjectDto.builder().withName("Project").build();
+        final ProjectDto projectDto = ProjectDto.builder().withName("Project " + UUID.randomUUID()).build();
         final String projectResponse = mockMvc.perform(post("/api/mission-control/v1/projects")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonMapper.writeValueAsString(projectDto)))
@@ -84,6 +87,7 @@ public class TaskControllerIntTest extends IntegrationTestBase {
         // 2. Create Task
         final TaskDto taskDto = TaskDto.builder()
                 .withProjectId(createdProject.getId())
+                .withName("Task to assign Name")
                 .withDescription("Task to assign")
                 .build();
         final String taskResponse = mockMvc.perform(post("/api/mission-control/v1/tasks")
@@ -94,7 +98,7 @@ public class TaskControllerIntTest extends IntegrationTestBase {
         final TaskDto createdTask = jsonMapper.readValue(taskResponse, TaskDto.class);
 
         // 3. Create User
-        final UserDto userDto = UserDto.builder().withUserName("testuser").build();
+        final UserDto userDto = UserDto.builder().withUserName("testuser-" + UUID.randomUUID()).build();
         final String userResponse = mockMvc.perform(post("/api/mission-control/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonMapper.writeValueAsString(userDto)))
@@ -111,9 +115,9 @@ public class TaskControllerIntTest extends IntegrationTestBase {
     }
 
     @Test
-    void move_task_to_new_status_ok() throws Exception {
+    void update_task_assigned_user_ok() throws Exception {
         // 1. Create Project
-        final ProjectDto projectDto = ProjectDto.builder().withName("Project").build();
+        final ProjectDto projectDto = ProjectDto.builder().withName("Project Update " + UUID.randomUUID()).build();
         final String projectResponse = mockMvc.perform(post("/api/mission-control/v1/projects")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonMapper.writeValueAsString(projectDto)))
@@ -124,6 +128,57 @@ public class TaskControllerIntTest extends IntegrationTestBase {
         // 2. Create Task
         final TaskDto taskDto = TaskDto.builder()
                 .withProjectId(createdProject.getId())
+                .withName("Task to update Name")
+                .withDescription("Task to update")
+                .build();
+        final String taskResponse = mockMvc.perform(post("/api/mission-control/v1/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonMapper.writeValueAsString(taskDto)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        final TaskDto createdTask = jsonMapper.readValue(taskResponse, TaskDto.class);
+
+        // 3. Create User
+        final UserDto userDto = UserDto.builder().withUserName("updateuser-" + UUID.randomUUID()).build();
+        final String userResponse = mockMvc.perform(post("/api/mission-control/v1/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonMapper.writeValueAsString(userDto)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        final UserDto createdUser = jsonMapper.readValue(userResponse, UserDto.class);
+
+        // 4. Update Task with assigned user
+        final TaskDto updateDto = TaskDto.builder()
+                .withName("Updated Task Name")
+                .withAssignedUserId(createdUser.getId())
+                .build();
+
+        final String updatedTaskResponse = mockMvc.perform(put("/api/mission-control/v1/tasks/" + createdTask.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonMapper.writeValueAsString(updateDto)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        final TaskDto updatedTask = jsonMapper.readValue(updatedTaskResponse, TaskDto.class);
+        assertThat(updatedTask.getName()).isEqualTo("Updated Task Name");
+        assertThat(updatedTask.getAssignedUserId()).isEqualTo(createdUser.getId());
+    }
+
+    @Test
+    void move_task_to_new_status_ok() throws Exception {
+        // 1. Create Project
+        final ProjectDto projectDto = ProjectDto.builder().withName("Project Move " + UUID.randomUUID()).build();
+        final String projectResponse = mockMvc.perform(post("/api/mission-control/v1/projects")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonMapper.writeValueAsString(projectDto)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        final ProjectDto createdProject = jsonMapper.readValue(projectResponse, ProjectDto.class);
+
+        // 2. Create Task
+        final TaskDto taskDto = TaskDto.builder()
+                .withProjectId(createdProject.getId())
+                .withName("Task to move Name")
                 .withDescription("Task to move")
                 .withStatus(MissionStatus.BACKLOG)
                 .build();
@@ -145,7 +200,7 @@ public class TaskControllerIntTest extends IntegrationTestBase {
     @Test
     void create_task_with_assigned_user_ok() throws Exception {
         // 1. Create Project
-        final ProjectDto projectDto = ProjectDto.builder().withName("Project with assigned task").build();
+        final ProjectDto projectDto = ProjectDto.builder().withName("Project with assigned task " + UUID.randomUUID()).build();
         final String projectResponse = mockMvc.perform(post("/api/mission-control/v1/projects")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonMapper.writeValueAsString(projectDto)))
@@ -154,7 +209,7 @@ public class TaskControllerIntTest extends IntegrationTestBase {
         final ProjectDto createdProject = jsonMapper.readValue(projectResponse, ProjectDto.class);
 
         // 2. Create User
-        final UserDto userDto = UserDto.builder().withUserName("assignee").build();
+        final UserDto userDto = UserDto.builder().withUserName("assignee-" + UUID.randomUUID()).build();
         final String userResponse = mockMvc.perform(post("/api/mission-control/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonMapper.writeValueAsString(userDto)))
@@ -166,6 +221,7 @@ public class TaskControllerIntTest extends IntegrationTestBase {
         final TaskDto taskDto = TaskDto.builder()
                 .withProjectId(createdProject.getId())
                 .withAssignedUserId(createdUser.getId())
+                .withName("Task with user Name")
                 .withDescription("Task created with user")
                 .build();
 
@@ -182,7 +238,7 @@ public class TaskControllerIntTest extends IntegrationTestBase {
     @Test
     void task_blocked_status_validation() throws Exception {
         // 1. Create Project
-        final ProjectDto projectDto = ProjectDto.builder().withName("Project for Task").build();
+        final ProjectDto projectDto = ProjectDto.builder().withName("Project for Task " + UUID.randomUUID()).build();
         final String projectResponse = mockMvc.perform(post("/api/mission-control/v1/projects")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonMapper.writeValueAsString(projectDto)))
@@ -193,6 +249,7 @@ public class TaskControllerIntTest extends IntegrationTestBase {
         // 2. Create Task with BLOCKED status without reason - should fail (Conflict)
         final TaskDto taskDto = TaskDto.builder()
                 .withProjectId(createdProject.getId())
+                .withName("Blocked Task Name")
                 .withDescription("Blocked Task")
                 .withStatus(MissionStatus.BLOCKED)
                 .build();
@@ -204,6 +261,7 @@ public class TaskControllerIntTest extends IntegrationTestBase {
         // 3. Create Task with BLOCKED status with reason - should succeed
         final TaskDto taskWithReasonDto = TaskDto.builder()
                 .withProjectId(createdProject.getId())
+                .withName("Blocked Task 2 Name")
                 .withDescription("Blocked Task 2")
                 .withStatus(MissionStatus.BLOCKED)
                 .withBlockedReason("Dependency missing")
@@ -243,7 +301,7 @@ public class TaskControllerIntTest extends IntegrationTestBase {
     @Test
     void get_tasks_by_user_ok() throws Exception {
         // 1. Create Project
-        final ProjectDto projectDto = ProjectDto.builder().withName("Project for search tasks").build();
+        final ProjectDto projectDto = ProjectDto.builder().withName("Project for search tasks " + UUID.randomUUID()).build();
         final String projectResponse = mockMvc.perform(post("/api/mission-control/v1/projects")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonMapper.writeValueAsString(projectDto)))
@@ -252,7 +310,7 @@ public class TaskControllerIntTest extends IntegrationTestBase {
         final ProjectDto createdProject = jsonMapper.readValue(projectResponse, ProjectDto.class);
 
         // 2. Create User
-        final UserDto userDto = UserDto.builder().withUserName("task-search-user").build();
+        final UserDto userDto = UserDto.builder().withUserName("task-search-user-" + UUID.randomUUID()).build();
         final String userResponse = mockMvc.perform(post("/api/mission-control/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonMapper.writeValueAsString(userDto)))
@@ -261,9 +319,9 @@ public class TaskControllerIntTest extends IntegrationTestBase {
         final UserDto createdUser = jsonMapper.readValue(userResponse, UserDto.class);
 
         // 3. Create Tasks
-        final TaskDto task1 = TaskDto.builder().withProjectId(createdProject.getId()).withDescription("Task 1").withAssignedUserId(createdUser.getId()).build();
-        final TaskDto task2 = TaskDto.builder().withProjectId(createdProject.getId()).withDescription("Task 2").withAssignedUserId(createdUser.getId()).build();
-        final TaskDto task3 = TaskDto.builder().withProjectId(createdProject.getId()).withDescription("Task 3").build();
+        final TaskDto task1 = TaskDto.builder().withProjectId(createdProject.getId()).withName("Task 1 Name").withDescription("Task 1").withAssignedUserId(createdUser.getId()).build();
+        final TaskDto task2 = TaskDto.builder().withProjectId(createdProject.getId()).withName("Task 2 Name").withDescription("Task 2").withAssignedUserId(createdUser.getId()).build();
+        final TaskDto task3 = TaskDto.builder().withProjectId(createdProject.getId()).withName("Task 3 Name").withDescription("Task 3").build();
 
         mockMvc.perform(post("/api/mission-control/v1/tasks")
                 .contentType(MediaType.APPLICATION_JSON)

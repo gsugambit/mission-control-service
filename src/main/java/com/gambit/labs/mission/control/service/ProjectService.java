@@ -46,10 +46,13 @@ public class ProjectService {
                 .withAssignedUser(assignedUser)
                 .build();
 
-        final ProjectDao savedProject = projectRepository.save(projectDao);
-        LOGGER.info("Created project with id: {}", savedProject.getId());
-
-        return mapToDto(savedProject);
+        try {
+            final ProjectDao savedProject = projectRepository.save(projectDao);
+            LOGGER.info("Created project with id: {}", savedProject.getId());
+            return mapToDto(savedProject);
+        } catch (final org.springframework.dao.DataIntegrityViolationException ex) {
+            throw new DataViolationException("Project with the same name already exists");
+        }
     }
 
     @Transactional(readOnly = true)

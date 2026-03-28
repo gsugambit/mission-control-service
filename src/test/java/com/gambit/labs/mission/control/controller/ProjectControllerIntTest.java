@@ -73,6 +73,7 @@ public class ProjectControllerIntTest extends IntegrationTestBase {
 
         // 2. Create Task for Project
         final TaskDto taskDto = TaskDto.builder()
+                .withName("Task for project deletion test")
                 .withProjectId(createdProject.getId())
                 .withDescription("Test Task")
                 .withStatus(MissionStatus.BACKLOG)

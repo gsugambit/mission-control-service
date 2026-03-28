@@ -23,6 +23,7 @@ public class TaskDto {
     private UUID assignedUserId;
     private MissionStatus status;
     private String blockedReason;
+    private String name;
     private String description;
     private String acceptanceCriteria;
     private Instant dateCreated;

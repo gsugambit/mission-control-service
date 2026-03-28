@@ -1,0 +1,23 @@
+POSTGRESQL_DATABASE_NAME: mission_control
+POSTGRESQL_USERNAME: mission_control_user
+POSTGRESQL_PASSWORD: mission-control-2026-gsu-gambit-labs
+POSTGRES_HOST: db:5432
+spring:
+  docker:
+    compose:
+      enabled: false
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST}/${POSTGRESQL_DATABASE_NAME}
+    username: ${POSTGRESQL_USERNAME}
+    password: ${POSTGRESQL_PASSWORD}
+    hikari:
+      maximum-pool-size: ${POSTGRES_CONNECT_POOL_SIZE:2}
+      minimum-idle: ${POSTGRES_CONNECT_MIN_IDLE:1}
+      idle-timeout: ${POSTGRES_CONNECT_IDLE_TIMEOUT:600000}
+      max-lifetime: ${POSTGRES_CONNECT_MAX_LIFETIME:1800000}
+      connection-timeout: ${POSTGRES_CONNECT_CONNECT_TIMEOUT:10000}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
