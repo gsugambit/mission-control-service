@@ -46,7 +46,7 @@ public class ProjectDao {
   @Column(name = "description")
   private String description;
 
-  @Column(name = "prefix")
+  @Column(name = "prefix", nullable = false)
   private String prefix;
 
   @ManyToOne(fetch = FetchType.LAZY)

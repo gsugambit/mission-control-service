@@ -104,6 +104,7 @@ class TaskServiceTest {
     // given
     final UUID projectId = UUID.randomUUID();
     final String taskName = "New Task";
+    final String taskCode = "PRJ-1";
     final TaskDto taskDto = TaskDto.builder()
         .withProjectId(projectId)
         .withName(taskName)
@@ -118,10 +119,11 @@ class TaskServiceTest {
         .withName(taskName)
         .withDescription("Task description")
         .withStatus(MissionStatus.BACKLOG)
+        .withTaskCode(taskCode)
         .build();
 
     when(projectRepository.findById(projectId)).thenReturn(Optional.of(projectDao));
-    when(taskRepository.save(any(TaskDao.class))).thenReturn(savedTask);
+    when(taskRepository.saveAndFlush(any(TaskDao.class))).thenReturn(savedTask);
 
     // when
     final TaskDto result = taskService.createTask(taskDto);
@@ -130,7 +132,8 @@ class TaskServiceTest {
     assertNotNull(result.getId());
     assertEquals(taskName, result.getName());
     assertEquals(MissionStatus.BACKLOG, result.getStatus());
-    verify(taskRepository).save(any(TaskDao.class));
+    assertEquals(taskCode, result.getTaskCode());
+    verify(taskRepository).saveAndFlush(any(TaskDao.class));
   }
 
   @Test

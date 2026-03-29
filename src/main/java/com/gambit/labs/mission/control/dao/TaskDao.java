@@ -21,6 +21,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Generated;
+import org.hibernate.generator.EventType;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -63,6 +65,10 @@ public class TaskDao {
 
   @Column(name = "acceptance_criteria")
   private String acceptanceCriteria;
+
+  @Generated(event = {EventType.INSERT})
+  @Column(name = "task_code", updatable = false, insertable = false)
+  private String taskCode;
 
   @CreatedDate
   @Column(name = "date_created", nullable = false, updatable = false)
