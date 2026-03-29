@@ -78,8 +78,8 @@ public class GlobalExceptionHandler {
   public ResponseEntity<?> handleNoResourceFoundException(HttpServletRequest req,
       NoResourceFoundException ex) {
     LOGGER.info("Unexpected NoResourceFoundException", ex);
-    ExceptionResponse exceptionResponse = ExceptionResponse.from(ex, req.getRequestURI());
-    exceptionResponse.setMessage("");
+    ExceptionResponse exceptionResponse = ExceptionResponse.fromOverrideMessage(ex,
+        req.getRequestURI());
 
     return ResponseEntity.badRequest().body(exceptionResponse);
   }

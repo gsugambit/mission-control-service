@@ -1,5 +1,6 @@
 package com.gambit.labs.mission.control.controller;
 
+import static com.gambit.labs.mission.control.exception.ExceptionResponse.OVERRIDE_EXCEPTION_MESSAGE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
@@ -119,7 +120,8 @@ class GlobalExceptionHandlerTest {
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     ExceptionResponse body = (ExceptionResponse) response.getBody();
     assertNotNull(body);
-    assertEquals("", body.getMessage());
+    assertEquals(OVERRIDE_EXCEPTION_MESSAGE, body.getMessage());
+
   }
 
   @Test
@@ -191,7 +193,7 @@ class GlobalExceptionHandlerTest {
     assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     ExceptionResponse body = (ExceptionResponse) response.getBody();
     assertNotNull(body);
-    assertEquals(ExceptionResponse.OVERRIDE_EXCEPTION_MESSAGE, body.getMessage());
+    assertEquals(OVERRIDE_EXCEPTION_MESSAGE, body.getMessage());
   }
 
   @Test
@@ -206,6 +208,6 @@ class GlobalExceptionHandlerTest {
     assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     ExceptionResponse body = (ExceptionResponse) response.getBody();
     assertNotNull(body);
-    assertEquals(ExceptionResponse.OVERRIDE_EXCEPTION_MESSAGE, body.getMessage());
+    assertEquals(OVERRIDE_EXCEPTION_MESSAGE, body.getMessage());
   }
 }
