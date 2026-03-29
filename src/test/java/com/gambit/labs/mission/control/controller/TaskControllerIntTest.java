@@ -54,8 +54,30 @@ public class TaskControllerIntTest extends IntegrationTestBase {
     final TaskDto createdTask = jsonMapper.readValue(taskResponse, TaskDto.class);
     assertThat(createdTask.getId()).isNotNull();
     assertThat(createdTask.getProjectId()).isEqualTo(createdProject.getId());
+    assertThat(createdTask.getTaskCode()).startsWith("TSK-");
 
-    // 3. Delete Task
+    // 3. Update Task (taskCode should be immutable)
+    final TaskDto updateDto = TaskDto.builder()
+        .withProjectId(createdProject.getId())
+        .withName("Updated Task Name")
+        .withDescription("Updated Task Description")
+        .withStatus(MissionStatus.BACKLOG)
+        .withTaskCode("FAKE-CODE")
+        .build();
+
+    final String updateResponse = mockMvc.perform(
+            put("/api/mission-control/v1/tasks/" + createdTask.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(updateDto)))
+        .andExpect(status().isOk())
+        .andReturn().getResponse().getContentAsString();
+
+    final TaskDto updatedTask = jsonMapper.readValue(updateResponse, TaskDto.class);
+    assertThat(updatedTask.getName()).isEqualTo("Updated Task Name");
+    assertThat(updatedTask.getTaskCode()).isEqualTo(createdTask.getTaskCode());
+    assertThat(updatedTask.getTaskCode()).isNotEqualTo("FAKE-CODE");
+
+    // 4. Delete Task
     mockMvc.perform(delete("/api/mission-control/v1/tasks/" + createdTask.getId()))
         .andExpect(status().isNoContent());
   }

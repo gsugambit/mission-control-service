@@ -26,6 +26,7 @@ public class TaskDto {
   private String name;
   private String description;
   private String acceptanceCriteria;
+  private String taskCode;
   private Instant dateCreated;
   private Instant dateModified;
 

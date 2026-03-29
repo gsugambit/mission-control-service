@@ -68,7 +68,9 @@ public class TaskService {
         .withAcceptanceCriteria(taskDto.getAcceptanceCriteria())
         .build();
 
-    final TaskDao savedTask = taskRepository.save(taskDao);
+    // required to flush or task_code will be null on DTO
+    final TaskDao savedTask = taskRepository.saveAndFlush(taskDao);
+
     LOGGER.info("Created task with id: {} for project id: {}", savedTask.getId(),
         projectDao.getId());
 
@@ -171,6 +173,7 @@ public class TaskService {
         .withName(taskDao.getName())
         .withDescription(taskDao.getDescription())
         .withAcceptanceCriteria(taskDao.getAcceptanceCriteria())
+        .withTaskCode(taskDao.getTaskCode())
         .withDateCreated(taskDao.getDateCreated())
         .withDateModified(taskDao.getDateModified())
         .build();

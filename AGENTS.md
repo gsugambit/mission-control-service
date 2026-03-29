@@ -90,6 +90,7 @@ As new endpoints are created, place a reference to them in corresponding section
 - Use JUnit 5 for unit and integration testing.
 - Use Mockito for mocking dependencies in unit tests.
 - Remember the testing pyramid. There should be more unit tests than integration test
+- Before creating new test files, ensure there's not already an appropriate file
 - Look at existing patterns in tests and match them where possible
 - Use `@SpringBootTest` for integration tests that require the Spring context.
 - Use `given/when/then` structure in test methods for clarity.
