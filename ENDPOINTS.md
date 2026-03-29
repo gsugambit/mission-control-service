@@ -14,6 +14,7 @@ This document lists the available REST endpoints and their data structures for t
 - `id`: UUID - Unique identifier for the project.
 - `name`: String - Name of the project.
 - `description`: String - Detailed description of the project.
+- `prefix`: String - Optional prefix for tasks in the project.
 - `assignedUserId`: UUID - ID of the user assigned to this project.
 - `status`: MissionStatus - Current status of the project.
 - `blockedReason`: String - Reason why the project is blocked (if status is BLOCKED).
@@ -76,7 +77,7 @@ Endpoints for managing projects and their lifecycle.
 - **Path**: `POST /api/mission-control/v1/projects`
 - **Input**: `ProjectDto` (JSON)
     - Required: `name`
-    - Optional: `description`
+    - Optional: `description`, `prefix`
 - **Output**: `ProjectDto` (JSON)
 - **Description**: Creates a new project.
 
@@ -98,7 +99,7 @@ Endpoints for managing projects and their lifecycle.
     - `id`: Path variable (UUID)
     - `ProjectDto`: Request body (JSON)
 - **Output**: `ProjectDto` (JSON)
-- **Description**: Updates an existing project's name and description.
+- **Description**: Updates an existing project's name, description and prefix.
 
 ### Delete Project
 - **Path**: `DELETE /api/mission-control/v1/projects/{id}`

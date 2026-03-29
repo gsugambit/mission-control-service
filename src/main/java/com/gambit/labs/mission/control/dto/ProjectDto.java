@@ -21,6 +21,7 @@ public class ProjectDto {
     private UUID id;
     private String name;
     private String description;
+    private String prefix;
     private UUID assignedUserId;
     private MissionStatus status;
     private String blockedReason;
