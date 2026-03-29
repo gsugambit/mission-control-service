@@ -12,6 +12,7 @@ public class ObjectUtils {
 
   /**
    * Writes the object as a json string
+   *
    * @param o - object
    * @return - jsonified string
    */
