@@ -1,23 +1,24 @@
 package com.gambit.labs.mission.control.service;
 
+import com.gambit.labs.mission.control.dao.MissionStatus;
 import com.gambit.labs.mission.control.dao.ProjectDao;
 import com.gambit.labs.mission.control.dao.TaskDao;
-import com.gambit.labs.mission.control.dao.MissionStatus;
 import com.gambit.labs.mission.control.dao.UserDao;
 import com.gambit.labs.mission.control.dto.TaskDto;
 import com.gambit.labs.mission.control.exception.DataViolationException;
+import com.gambit.labs.mission.control.exception.InvalidRequestException;
 import com.gambit.labs.mission.control.exception.NotFoundException;
 import com.gambit.labs.mission.control.repository.ProjectRepository;
 import com.gambit.labs.mission.control.repository.TaskRepository;
 import com.gambit.labs.mission.control.repository.UserRepository;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import org.springframework.util.StringUtils;
 
 @Slf4j
 @Service
@@ -25,149 +26,170 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class TaskService {
 
-    private final TaskRepository taskRepository;
-    private final ProjectRepository projectRepository;
-    private final UserRepository userRepository;
+  private final TaskRepository taskRepository;
+  private final ProjectRepository projectRepository;
+  private final UserRepository userRepository;
 
-    public TaskDto createTask(final TaskDto taskDto) {
-        final ProjectDao projectDao = projectRepository.findById(taskDto.getProjectId())
-                .orElseThrow(() -> new NotFoundException("Project not found with id: " + taskDto.getProjectId()));
-
-        UserDao assignedUser = null;
-        if (taskDto.getAssignedUserId() != null) {
-            assignedUser = userRepository.findById(taskDto.getAssignedUserId())
-                    .orElseThrow(() -> new NotFoundException("User not found with id: " + taskDto.getAssignedUserId()));
-        }
-
-        final MissionStatus status = taskDto.getStatus() != null ? taskDto.getStatus() : MissionStatus.BACKLOG;
-        validateBlockedReason(status, taskDto.getBlockedReason());
-
-        final TaskDao taskDao = TaskDao.builder()
-                .withProject(projectDao)
-                .withAssignedUser(assignedUser)
-                .withStatus(status)
-                .withBlockedReason(taskDto.getBlockedReason())
-                .withName(taskDto.getName())
-                .withDescription(taskDto.getDescription())
-                .withAcceptanceCriteria(taskDto.getAcceptanceCriteria())
-                .build();
-
-        final TaskDao savedTask = taskRepository.save(taskDao);
-        LOGGER.info("Created task with id: {} for project id: {}", savedTask.getId(), projectDao.getId());
-
-        return mapToDto(savedTask);
+  public TaskDto createTask(final TaskDto taskDto) {
+    if (taskDto.getProjectId() == null) {
+      throw new InvalidRequestException("Project ID is required");
+    }
+    if (!StringUtils.hasText(taskDto.getName())) {
+      throw new InvalidRequestException("Task name is required");
+    }
+    if (!StringUtils.hasText(taskDto.getDescription())) {
+      throw new InvalidRequestException("Task description is required");
     }
 
-    @Transactional(readOnly = true)
-    public TaskDto getTask(final UUID id) {
-        return taskRepository.findById(id)
-                .map(this::mapToDto)
-                .orElseThrow(() -> new NotFoundException("Task not found with id: " + id));
+    final ProjectDao projectDao = projectRepository.findById(taskDto.getProjectId())
+        .orElseThrow(
+            () -> new NotFoundException("Project not found with id: " + taskDto.getProjectId()));
+
+    UserDao assignedUser = null;
+    if (taskDto.getAssignedUserId() != null) {
+      assignedUser = userRepository.findById(taskDto.getAssignedUserId())
+          .orElseThrow(() -> new NotFoundException(
+              "User not found with id: " + taskDto.getAssignedUserId()));
     }
 
-    @Transactional(readOnly = true)
-    public List<TaskDto> getAllTasks() {
-        return taskRepository.findAll().stream()
-                .map(this::mapToDto)
-                .collect(Collectors.toList());
+    if (taskDto.getStatus() == null) {
+      throw new InvalidRequestException("Task status is required");
     }
 
-    public TaskDto updateTask(final UUID id, final TaskDto taskDto) {
-        final TaskDao taskDao = taskRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Task not found with id: " + id));
+    validateBlockedReason(taskDto.getStatus(), taskDto.getBlockedReason());
 
-        if (taskDto.getStatus() != null) {
-            validateBlockedReason(taskDto.getStatus(), taskDto.getBlockedReason());
-            updateStatusAndBlockedReason(taskDao, taskDto.getStatus(), taskDto.getBlockedReason());
-        }
+    final TaskDao taskDao = TaskDao.builder()
+        .withProject(projectDao)
+        .withAssignedUser(assignedUser)
+        .withStatus(taskDto.getStatus())
+        .withBlockedReason(taskDto.getBlockedReason())
+        .withName(taskDto.getName())
+        .withDescription(taskDto.getDescription())
+        .withAcceptanceCriteria(taskDto.getAcceptanceCriteria())
+        .build();
 
-        if (taskDto.getAssignedUserId() != null) {
-            final UserDao assignedUser = userRepository.findById(taskDto.getAssignedUserId())
-                    .orElseThrow(() -> new NotFoundException("User not found with id: " + taskDto.getAssignedUserId()));
-            taskDao.setAssignedUser(assignedUser);
-        } else {
-            taskDao.setAssignedUser(null);
-        }
+    final TaskDao savedTask = taskRepository.save(taskDao);
+    LOGGER.info("Created task with id: {} for project id: {}", savedTask.getId(),
+        projectDao.getId());
 
-        taskDao.setName(taskDto.getName());
-        taskDao.setDescription(taskDto.getDescription());
-        taskDao.setAcceptanceCriteria(taskDto.getAcceptanceCriteria());
+    return mapToDto(savedTask);
+  }
 
-        final TaskDao updatedTask = taskRepository.save(taskDao);
-        LOGGER.info("Updated task with id: {}", updatedTask.getId());
+  @Transactional(readOnly = true)
+  public TaskDto getTask(final UUID id) {
+    return taskRepository.findById(id)
+        .map(this::mapToDto)
+        .orElseThrow(() -> new NotFoundException("Task not found with id: " + id));
+  }
 
-        return mapToDto(updatedTask);
+  @Transactional(readOnly = true)
+  public List<TaskDto> getAllTasks() {
+    return taskRepository.findAll().stream()
+        .map(this::mapToDto)
+        .collect(Collectors.toList());
+  }
+
+  public TaskDto updateTask(final UUID id, final TaskDto taskDto) {
+    final TaskDao taskDao = taskRepository.findById(id)
+        .orElseThrow(() -> new NotFoundException("Task not found with id: " + id));
+
+    if (taskDto.getStatus() != null) {
+      validateBlockedReason(taskDto.getStatus(), taskDto.getBlockedReason());
+      updateStatusAndBlockedReason(taskDao, taskDto.getStatus(), taskDto.getBlockedReason());
     }
 
-    public void deleteTask(final UUID id) {
-        if (!taskRepository.existsById(id)) {
-            throw new NotFoundException("Task not found with id: " + id);
-        }
-        taskRepository.deleteById(id);
-        LOGGER.info("Deleted task with id: {}", id);
+    if (taskDto.getAssignedUserId() != null) {
+      final UserDao assignedUser = userRepository.findById(taskDto.getAssignedUserId())
+          .orElseThrow(() -> new NotFoundException(
+              "User not found with id: " + taskDto.getAssignedUserId()));
+      taskDao.setAssignedUser(assignedUser);
+    } else {
+      taskDao.setAssignedUser(null);
     }
 
-    public TaskDto assignUser(final UUID taskId, final UUID userId) {
-        final TaskDao taskDao = taskRepository.findById(taskId)
-                .orElseThrow(() -> new NotFoundException("Task not found with id: " + taskId));
+    taskDao.setName(taskDto.getName());
+    taskDao.setDescription(taskDto.getDescription());
+    taskDao.setAcceptanceCriteria(taskDto.getAcceptanceCriteria());
 
-        final UserDao userDao = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
+    final TaskDao updatedTask = taskRepository.save(taskDao);
+    LOGGER.info("Updated task with id: {}", updatedTask.getId());
 
-        taskDao.setAssignedUser(userDao);
-        final TaskDao updatedTask = taskRepository.save(taskDao);
-        LOGGER.info("Assigned user with id: {} to task with id: {}", userId, taskId);
+    return mapToDto(updatedTask);
+  }
 
-        return mapToDto(updatedTask);
+  public void deleteTask(final UUID id) {
+    if (!taskRepository.existsById(id)) {
+      throw new NotFoundException("Task not found with id: " + id);
     }
+    taskRepository.deleteById(id);
+    LOGGER.info("Deleted task with id: {}", id);
+  }
 
-    public TaskDto updateTaskStatus(final UUID taskId, final MissionStatus status, final String blockedReason) {
-        final TaskDao taskDao = taskRepository.findById(taskId)
-                .orElseThrow(() -> new NotFoundException("Task not found with id: " + taskId));
+  public TaskDto assignUser(final UUID taskId, final UUID userId) {
+    final TaskDao taskDao = taskRepository.findById(taskId)
+        .orElseThrow(() -> new NotFoundException("Task not found with id: " + taskId));
 
-        validateBlockedReason(status, blockedReason);
-        updateStatusAndBlockedReason(taskDao, status, blockedReason);
-        
-        final TaskDao updatedTask = taskRepository.save(taskDao);
-        LOGGER.info("Updated status to {} for task with id: {}", status, taskId);
+    final UserDao userDao = userRepository.findById(userId)
+        .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
 
-        return mapToDto(updatedTask);
+    taskDao.setAssignedUser(userDao);
+    final TaskDao updatedTask = taskRepository.save(taskDao);
+    LOGGER.info("Assigned user with id: {} to task with id: {}", userId, taskId);
+
+    return mapToDto(updatedTask);
+  }
+
+  public TaskDto updateTaskStatus(final UUID taskId, final MissionStatus status,
+      final String blockedReason) {
+    final TaskDao taskDao = taskRepository.findById(taskId)
+        .orElseThrow(() -> new NotFoundException("Task not found with id: " + taskId));
+
+    validateBlockedReason(status, blockedReason);
+    updateStatusAndBlockedReason(taskDao, status, blockedReason);
+
+    final TaskDao updatedTask = taskRepository.save(taskDao);
+    LOGGER.info("Updated status to {} for task with id: {}", status, taskId);
+
+    return mapToDto(updatedTask);
+  }
+
+  @Transactional(readOnly = true)
+  public List<TaskDto> getTasksByUserId(final UUID userId) {
+    return taskRepository.findAllByAssignedUserId(userId).stream()
+        .map(this::mapToDto)
+        .collect(Collectors.toList());
+  }
+
+  private TaskDto mapToDto(final TaskDao taskDao) {
+    return TaskDto.builder()
+        .withId(taskDao.getId())
+        .withProjectId(taskDao.getProject().getId())
+        .withAssignedUserId(
+            taskDao.getAssignedUser() != null ? taskDao.getAssignedUser().getId() : null)
+        .withStatus(taskDao.getStatus())
+        .withBlockedReason(taskDao.getBlockedReason())
+        .withName(taskDao.getName())
+        .withDescription(taskDao.getDescription())
+        .withAcceptanceCriteria(taskDao.getAcceptanceCriteria())
+        .withDateCreated(taskDao.getDateCreated())
+        .withDateModified(taskDao.getDateModified())
+        .build();
+  }
+
+  private void validateBlockedReason(final MissionStatus status, final String blockedReason) {
+    if (MissionStatus.BLOCKED.equals(status) && !StringUtils.hasText(blockedReason)) {
+      throw new DataViolationException("Blocked reason is required when status is BLOCKED");
     }
+  }
 
-    @Transactional(readOnly = true)
-    public List<TaskDto> getTasksByUserId(final UUID userId) {
-        return taskRepository.findAllByAssignedUserId(userId).stream()
-                .map(this::mapToDto)
-                .collect(Collectors.toList());
+  private void updateStatusAndBlockedReason(final TaskDao taskDao, final MissionStatus newStatus,
+      final String newReason) {
+    if (MissionStatus.BLOCKED.equals(taskDao.getStatus()) && !MissionStatus.BLOCKED.equals(
+        newStatus)) {
+      taskDao.setBlockedReason(null);
+    } else if (MissionStatus.BLOCKED.equals(newStatus)) {
+      taskDao.setBlockedReason(newReason);
     }
-
-    private TaskDto mapToDto(final TaskDao taskDao) {
-        return TaskDto.builder()
-                .withId(taskDao.getId())
-                .withProjectId(taskDao.getProject().getId())
-                .withAssignedUserId(taskDao.getAssignedUser() != null ? taskDao.getAssignedUser().getId() : null)
-                .withStatus(taskDao.getStatus())
-                .withBlockedReason(taskDao.getBlockedReason())
-                .withName(taskDao.getName())
-                .withDescription(taskDao.getDescription())
-                .withAcceptanceCriteria(taskDao.getAcceptanceCriteria())
-                .withDateCreated(taskDao.getDateCreated())
-                .withDateModified(taskDao.getDateModified())
-                .build();
-    }
-
-    private void validateBlockedReason(final MissionStatus status, final String blockedReason) {
-        if (MissionStatus.BLOCKED.equals(status) && (blockedReason == null || blockedReason.isBlank())) {
-            throw new DataViolationException("Blocked reason is required when status is BLOCKED");
-        }
-    }
-
-    private void updateStatusAndBlockedReason(final TaskDao taskDao, final MissionStatus newStatus, final String newReason) {
-        if (MissionStatus.BLOCKED.equals(taskDao.getStatus()) && !MissionStatus.BLOCKED.equals(newStatus)) {
-            taskDao.setBlockedReason(null);
-        } else if (MissionStatus.BLOCKED.equals(newStatus)) {
-            taskDao.setBlockedReason(newReason);
-        }
-        taskDao.setStatus(newStatus);
-    }
+    taskDao.setStatus(newStatus);
+  }
 }
