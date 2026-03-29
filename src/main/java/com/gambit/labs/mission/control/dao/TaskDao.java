@@ -13,6 +13,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.time.Instant;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,9 +24,6 @@ import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import java.time.Instant;
-import java.util.UUID;
 
 @Entity
 @Table(name = "tasks")
@@ -36,45 +35,45 @@ import java.util.UUID;
 @EntityListeners(AuditingEntityListener.class)
 public class TaskDao {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", updatable = false, nullable = false)
-    private UUID id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  @Column(name = "id", updatable = false, nullable = false)
+  private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "project_id", nullable = false)
-    private ProjectDao project;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "project_id", nullable = false)
+  private ProjectDao project;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "assigned_user_id")
-    private UserDao assignedUser;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "assigned_user_id")
+  private UserDao assignedUser;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
-    private MissionStatus status;
+  @Enumerated(EnumType.STRING)
+  @Column(name = "status", nullable = false)
+  private MissionStatus status;
 
-    @Column(name = "blocked_reason")
-    private String blockedReason;
+  @Column(name = "blocked_reason")
+  private String blockedReason;
 
-    @Column(name = "name", nullable = false)
-    private String name;
+  @Column(name = "name", nullable = false)
+  private String name;
 
-    @Column(name = "description")
-    private String description;
+  @Column(name = "description")
+  private String description;
 
-    @Column(name = "acceptance_criteria")
-    private String acceptanceCriteria;
+  @Column(name = "acceptance_criteria")
+  private String acceptanceCriteria;
 
-    @CreatedDate
-    @Column(name = "date_created", nullable = false, updatable = false)
-    private Instant dateCreated;
+  @CreatedDate
+  @Column(name = "date_created", nullable = false, updatable = false)
+  private Instant dateCreated;
 
-    @LastModifiedDate
-    @Column(name = "date_modified", nullable = false)
-    private Instant dateModified;
+  @LastModifiedDate
+  @Column(name = "date_modified", nullable = false)
+  private Instant dateModified;
 
-    @Override
-    public String toString() {
-        return ObjectUtils.toString(this);
-    }
+  @Override
+  public String toString() {
+    return ObjectUtils.toString(this);
+  }
 }
