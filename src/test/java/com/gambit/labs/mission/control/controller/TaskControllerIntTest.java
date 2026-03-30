@@ -83,6 +83,50 @@ public class TaskControllerIntTest extends IntegrationTestBase {
   }
 
   @Test
+  void get_task_by_code_ok() throws Exception {
+    // 1. Create Project
+    final ProjectDto projectDto = ProjectDto.builder()
+        .withName("Project for Task " + UUID.randomUUID())
+        .withPrefix("CODE")
+        .withStatus(MissionStatus.BACKLOG)
+        .build();
+
+    final String projectResponse = mockMvc.perform(post("/api/mission-control/v1/projects")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(jsonMapper.writeValueAsString(projectDto)))
+        .andExpect(status().isCreated())
+        .andReturn().getResponse().getContentAsString();
+
+    final ProjectDto createdProject = jsonMapper.readValue(projectResponse, ProjectDto.class);
+
+    // 2. Create Task
+    final TaskDto taskDto = TaskDto.builder()
+        .withProjectId(createdProject.getId())
+        .withName("Test Task Name")
+        .withDescription("Test Task")
+        .withStatus(MissionStatus.BACKLOG)
+        .build();
+
+    final String taskResponse = mockMvc.perform(post("/api/mission-control/v1/tasks")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(jsonMapper.writeValueAsString(taskDto)))
+        .andExpect(status().isCreated())
+        .andReturn().getResponse().getContentAsString();
+
+    final TaskDto createdTask = jsonMapper.readValue(taskResponse, TaskDto.class);
+
+    // 3. Get Task by Task Code
+    final String getByCodeResponse = mockMvc.perform(
+            get("/api/mission-control/v1/tasks/task-code/" + createdTask.getTaskCode()))
+        .andExpect(status().isOk())
+        .andReturn().getResponse().getContentAsString();
+
+    final TaskDto taskFromCode = jsonMapper.readValue(getByCodeResponse, TaskDto.class);
+    assertThat(taskFromCode.getId()).isEqualTo(createdTask.getId());
+    assertThat(taskFromCode.getTaskCode()).isEqualTo(createdTask.getTaskCode());
+  }
+
+  @Test
   void create_task_without_project_fails() throws Exception {
     final TaskDto taskDto = TaskDto.builder()
         .withProjectId(UUID.randomUUID())

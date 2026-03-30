@@ -171,6 +171,13 @@ Endpoints for managing tasks within projects.
 - **Output**: `TaskDto` (JSON)
 - **Description**: Retrieves details of a specific task.
 
+### Get Task by Task Code
+
+- **Path**: `GET /api/mission-control/v1/tasks/task-code/{taskCode}`
+- **Input**: `taskCode` (Path variable, String)
+- **Output**: `TaskDto` (JSON)
+- **Description**: Retrieves details of a specific task using its human-readable code.
+
 ### Get All Tasks
 
 - **Path**: `GET /api/mission-control/v1/tasks`

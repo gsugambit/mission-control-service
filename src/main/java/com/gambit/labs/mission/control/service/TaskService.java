@@ -85,6 +85,13 @@ public class TaskService {
   }
 
   @Transactional(readOnly = true)
+  public TaskDto getTaskByCode(final String taskCode) {
+    return taskRepository.findByTaskCode(taskCode)
+        .map(this::mapToDto)
+        .orElseThrow(() -> new NotFoundException("Task not found with code: " + taskCode));
+  }
+
+  @Transactional(readOnly = true)
   public List<TaskDto> getAllTasks() {
     return taskRepository.findAll().stream()
         .map(this::mapToDto)

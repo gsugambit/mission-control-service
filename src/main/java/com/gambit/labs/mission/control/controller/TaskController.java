@@ -38,6 +38,11 @@ public class TaskController {
     return taskService.getTask(id);
   }
 
+  @GetMapping("/task-code/{taskCode}")
+  public TaskDto getTaskByCode(final @PathVariable String taskCode) {
+    return taskService.getTaskByCode(taskCode);
+  }
+
   @GetMapping
   public List<TaskDto> getAllTasks() {
     return taskService.getAllTasks();
