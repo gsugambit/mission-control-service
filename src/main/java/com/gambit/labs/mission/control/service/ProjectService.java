@@ -64,7 +64,8 @@ public class ProjectService {
         .withAssignedUser(assignedUser)
         .build();
 
-    final ProjectDao savedProject = projectRepository.save(projectDao);
+    // Use saveAndFlush instead of save
+    final ProjectDao savedProject = projectRepository.saveAndFlush(projectDao);
     LOGGER.info("Created project with id: {}", savedProject.getId());
     return mapToDto(savedProject);
   }

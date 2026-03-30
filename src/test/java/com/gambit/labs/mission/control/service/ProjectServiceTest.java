@@ -173,7 +173,7 @@ class ProjectServiceTest {
         .build();
 
     when(projectRepository.existsByName(projectName)).thenReturn(false);
-    when(projectRepository.save(any(ProjectDao.class))).thenReturn(savedProject);
+    when(projectRepository.saveAndFlush(any(ProjectDao.class))).thenReturn(savedProject);
 
     // when
     final ProjectDto result = projectService.createProject(projectDto);
@@ -182,7 +182,7 @@ class ProjectServiceTest {
     assertNotNull(result.getId());
     assertEquals(projectName, result.getName());
     assertEquals(MissionStatus.BACKLOG, result.getStatus());
-    verify(projectRepository).save(any(ProjectDao.class));
+    verify(projectRepository).saveAndFlush(any(ProjectDao.class));
   }
 
   @Test

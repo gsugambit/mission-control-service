@@ -3,11 +3,15 @@
 This project uses the recently release SpringBoot4. You may not be aware of new packages but if the
 code compiles USE THEM.
 
-## Changes That Must Be Approved
+## Approval Needed
 
 Never change imports without user approval
 Never change `IntegrationTestBase` without user approval
 Never change `build.gradle` without user approval
+
+# Coding Musts
+
+If changes are made to DTO, a new flyway script should be inserted in `dbscripts`
 
 ## Markdown Management
 
@@ -50,7 +54,7 @@ As new endpoints are created, place a reference to them in corresponding section
 - Comments could be applied for: cron expressions, Regex patterns, TODOs or given/when/then
   separation in tests.
 - Use `@Override` annotation when overriding methods.
-- Wrap multiple conditions in a boolean variable for better readibility
+- Wrap multiple conditions in a boolean variable for better readability
 - Prefer early returns.
 - Avoid else statements when not necessary and try early returns.
 
@@ -60,6 +64,7 @@ As new endpoints are created, place a reference to them in corresponding section
 - Use `@Slf4j` from Lombok for logging.
 - Use `@Builder(setterPrefix = "with"))` for complex object creation.
 - Avoid `@Data` annotation; prefer `@Getter` and `@Setter` for granular control.
+- The logger name should be `LOGGER` according to `lombok.config`
 
 ## Annotations
 

@@ -20,8 +20,9 @@ public class UserControllerIntTest extends IntegrationTestBase {
   @Test
   void create_user_ok() throws Exception {
     // given
+    final String userName = "testuser-" + java.util.UUID.randomUUID();
     final UserDto userDto = UserDto.builder()
-        .withUserName("testuser")
+        .withUserName(userName)
         .build();
     final String content = jsonMapper.writeValueAsString(userDto);
 
@@ -35,7 +36,7 @@ public class UserControllerIntTest extends IntegrationTestBase {
     // then
     final UserDto createdUser = jsonMapper.readValue(responseContent, UserDto.class);
     assertThat(createdUser.getId()).isNotNull();
-    assertThat(createdUser.getUserName()).isEqualTo("testuser");
+    assertThat(createdUser.getUserName()).isEqualTo(userName);
     assertThat(createdUser.getDateCreated()).isNotNull();
     assertThat(createdUser.getDateModified()).isNotNull();
   }
@@ -43,8 +44,9 @@ public class UserControllerIntTest extends IntegrationTestBase {
   @Test
   void get_all_users_ok() throws Exception {
     // given
+    final String userName = "testuser-" + java.util.UUID.randomUUID();
     final UserDto userDto = UserDto.builder()
-        .withUserName("testuser")
+        .withUserName(userName)
         .build();
     final String content = jsonMapper.writeValueAsString(userDto);
     mockMvc.perform(post("/api/mission-control/v1/users")
@@ -61,14 +63,14 @@ public class UserControllerIntTest extends IntegrationTestBase {
     final List<UserDto> users = jsonMapper.readValue(responseContent, new TypeReference<>() {
     });
     assertThat(users).isNotEmpty();
-    assertThat(users).anyMatch(user -> user.getUserName().equals("testuser"));
+    assertThat(users).anyMatch(user -> user.getUserName().equals(userName));
   }
 
   @Test
   void delete_user_ok() throws Exception {
     // given
     final UserDto userDto = UserDto.builder()
-        .withUserName("deleteuser")
+        .withUserName("deleteuser-" + java.util.UUID.randomUUID())
         .build();
     final String content = jsonMapper.writeValueAsString(userDto);
     final String responseContent = mockMvc.perform(post("/api/mission-control/v1/users")
@@ -87,7 +89,7 @@ public class UserControllerIntTest extends IntegrationTestBase {
   void delete_user_conflict_when_assigned() throws Exception {
     // given
     final UserDto userDto = UserDto.builder()
-        .withUserName("assigneduser")
+        .withUserName("assigneduser-" + java.util.UUID.randomUUID())
         .build();
     final String userContent = jsonMapper.writeValueAsString(userDto);
     final String userResponse = mockMvc.perform(post("/api/mission-control/v1/users")
@@ -98,8 +100,8 @@ public class UserControllerIntTest extends IntegrationTestBase {
     final UserDto createdUser = jsonMapper.readValue(userResponse, UserDto.class);
 
     final ProjectDto projectDto = ProjectDto.builder()
-        .withName("proj-for-user")
-        .withPrefix("USER")
+        .withName("proj-for-user-" + java.util.UUID.randomUUID())
+        .withPrefix("USR" + java.util.UUID.randomUUID().toString().substring(0, 4))
         .withAssignedUserId(createdUser.getId())
         .withStatus(MissionStatus.BACKLOG)
         .build();

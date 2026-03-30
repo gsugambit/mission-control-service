@@ -45,6 +45,20 @@ Service.
 - `message`: String - Detailed error message.
 - `timestamp`: Instant - Timestamp when the error occurred.
 
+### TaskCommentCreateDto
+
+- `userId`: UUID - ID of the user creating the comment.
+- `comment`: String - The comment text.
+
+### TaskCommentDto
+
+- `id`: UUID - Unique identifier for the comment.
+- `taskId`: UUID - ID of the task this comment belongs to.
+- `userId`: UUID - ID of the user who created the comment.
+- `comment`: String - The comment text.
+- `dateCreated`: Instant - Timestamp when the comment was created.
+- `dateModified`: Instant - Timestamp when the comment was last modified.
+
 ### MissionStatus (Enum)
 
 Values: `BACKLOG`, `READY`, `IN_PROGRESS`, `BLOCKED`, `IN_REVIEW`, `DONE`
@@ -227,3 +241,25 @@ Endpoints for managing tasks within projects.
 - **Input**: `userId` (Path variable, UUID)
 - **Output**: `List<TaskDto>` (JSON)
 - **Description**: Retrieves all tasks assigned to a specific user.
+
+---
+
+## Task Comments
+
+Endpoints for managing comments on tasks.
+
+### Add Comment to Task
+
+- **Path**: `POST /api/mission-control/v1/tasks/{taskId}/comments`
+- **Input**:
+  - `taskId`: Path variable (UUID)
+  - `TaskCommentCreateDto`: Request body (JSON)
+- **Output**: `TaskCommentDto` (JSON)
+- **Description**: Adds a new comment to a task.
+
+### Get Comments for Task
+
+- **Path**: `GET /api/mission-control/v1/tasks/{taskId}/comments`
+- **Input**: `taskId`: Path variable (UUID)
+- **Output**: `List<TaskCommentDto>` (JSON)
+- **Description**: Retrieves all comments for a specific task, ordered by creation date (ascending).

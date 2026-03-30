@@ -25,7 +25,7 @@ public class TaskControllerIntTest extends IntegrationTestBase {
     // 1. Create Project (Tasks need a project)
     final ProjectDto projectDto = ProjectDto.builder()
         .withName("Project for Task " + UUID.randomUUID())
-        .withPrefix("TSK")
+        .withPrefix("TSK" + UUID.randomUUID().toString().substring(0, 4))
         .withStatus(MissionStatus.BACKLOG)
         .build();
 
@@ -54,7 +54,7 @@ public class TaskControllerIntTest extends IntegrationTestBase {
     final TaskDto createdTask = jsonMapper.readValue(taskResponse, TaskDto.class);
     assertThat(createdTask.getId()).isNotNull();
     assertThat(createdTask.getProjectId()).isEqualTo(createdProject.getId());
-    assertThat(createdTask.getTaskCode()).startsWith("TSK-");
+    assertThat(createdTask.getTaskCode()).startsWith(createdProject.getPrefix() + "-");
 
     // 3. Update Task (taskCode should be immutable)
     final TaskDto updateDto = TaskDto.builder()
@@ -87,7 +87,7 @@ public class TaskControllerIntTest extends IntegrationTestBase {
     // 1. Create Project
     final ProjectDto projectDto = ProjectDto.builder()
         .withName("Project for Task " + UUID.randomUUID())
-        .withPrefix("CODE")
+        .withPrefix("COD" + UUID.randomUUID().toString().substring(0, 4))
         .withStatus(MissionStatus.BACKLOG)
         .build();
 
@@ -145,7 +145,7 @@ public class TaskControllerIntTest extends IntegrationTestBase {
     // 1. Create Project
     final ProjectDto projectDto = ProjectDto.builder()
         .withName("Project " + UUID.randomUUID())
-        .withPrefix("ASGN")
+        .withPrefix("ASG" + UUID.randomUUID().toString().substring(0, 4))
         .withStatus(MissionStatus.BACKLOG)
         .build();
     final String projectResponse = mockMvc.perform(post("/api/mission-control/v1/projects")
@@ -192,7 +192,7 @@ public class TaskControllerIntTest extends IntegrationTestBase {
     // 1. Create Project
     final ProjectDto projectDto = ProjectDto.builder()
         .withName("Project Update " + UUID.randomUUID())
-        .withPrefix("UPD")
+        .withPrefix("UPD" + UUID.randomUUID().toString().substring(0, 4))
         .withStatus(MissionStatus.BACKLOG)
         .build();
     final String projectResponse = mockMvc.perform(post("/api/mission-control/v1/projects")
@@ -249,7 +249,7 @@ public class TaskControllerIntTest extends IntegrationTestBase {
     // 1. Create Project
     final ProjectDto projectDto = ProjectDto.builder()
         .withName("Project Move " + UUID.randomUUID())
-        .withPrefix("MOVE")
+        .withPrefix("MOVE" + UUID.randomUUID().toString().substring(0, 4))
         .withStatus(MissionStatus.BACKLOG)
         .build();
     final String projectResponse = mockMvc.perform(post("/api/mission-control/v1/projects")
@@ -288,7 +288,7 @@ public class TaskControllerIntTest extends IntegrationTestBase {
     // 1. Create Project
     final ProjectDto projectDto = ProjectDto.builder()
         .withName("Project with assigned task " + UUID.randomUUID())
-        .withPrefix("ATSK")
+        .withPrefix("ATSK" + UUID.randomUUID().toString().substring(0, 4))
         .withStatus(MissionStatus.BACKLOG)
         .build();
     final String projectResponse = mockMvc.perform(post("/api/mission-control/v1/projects")
@@ -331,7 +331,7 @@ public class TaskControllerIntTest extends IntegrationTestBase {
     // 1. Create Project
     final ProjectDto projectDto = ProjectDto.builder()
         .withName("Project for Task " + UUID.randomUUID())
-        .withPrefix("BLK")
+        .withPrefix("BLK" + UUID.randomUUID().toString().substring(0, 4))
         .withStatus(MissionStatus.BACKLOG)
         .build();
     final String projectResponse = mockMvc.perform(post("/api/mission-control/v1/projects")
@@ -403,7 +403,7 @@ public class TaskControllerIntTest extends IntegrationTestBase {
     // 1. Create Project
     final ProjectDto projectDto = ProjectDto.builder()
         .withName("Project for search tasks " + UUID.randomUUID())
-        .withPrefix("SRCH")
+        .withPrefix("SRCH" + UUID.randomUUID().toString().substring(0, 4))
         .withStatus(MissionStatus.BACKLOG)
         .build();
     final String projectResponse = mockMvc.perform(post("/api/mission-control/v1/projects")
