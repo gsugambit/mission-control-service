@@ -13,6 +13,7 @@ import com.gambit.labs.mission.control.dao.MissionStatus;
 import com.gambit.labs.mission.control.dto.ProjectDto;
 import com.gambit.labs.mission.control.dto.TaskDto;
 import com.gambit.labs.mission.control.dto.UserDto;
+import com.gambit.labs.mission.control.utils.TestDataUtils;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -24,7 +25,7 @@ public class TaskControllerIntTest extends IntegrationTestBase {
   void task_lifecycle_ok() throws Exception {
     // 1. Create Project (Tasks need a project)
     final ProjectDto projectDto = ProjectDto.builder()
-        .withName("Project for Task " + UUID.randomUUID())
+        .withName(TestDataUtils.makeProjectName())
         .withPrefix("TSK" + UUID.randomUUID().toString().substring(0, 4))
         .withStatus(MissionStatus.BACKLOG)
         .build();
@@ -86,7 +87,7 @@ public class TaskControllerIntTest extends IntegrationTestBase {
   void get_task_by_code_ok() throws Exception {
     // 1. Create Project
     final ProjectDto projectDto = ProjectDto.builder()
-        .withName("Project for Task " + UUID.randomUUID())
+        .withName(TestDataUtils.makeProjectName())
         .withPrefix("COD" + UUID.randomUUID().toString().substring(0, 4))
         .withStatus(MissionStatus.BACKLOG)
         .build();
@@ -144,7 +145,7 @@ public class TaskControllerIntTest extends IntegrationTestBase {
   void assign_user_to_task_ok() throws Exception {
     // 1. Create Project
     final ProjectDto projectDto = ProjectDto.builder()
-        .withName("Project " + UUID.randomUUID())
+        .withName(TestDataUtils.makeProjectName())
         .withPrefix("ASG" + UUID.randomUUID().toString().substring(0, 4))
         .withStatus(MissionStatus.BACKLOG)
         .build();
@@ -170,7 +171,7 @@ public class TaskControllerIntTest extends IntegrationTestBase {
     final TaskDto createdTask = jsonMapper.readValue(taskResponse, TaskDto.class);
 
     // 3. Create User
-    final UserDto userDto = UserDto.builder().withUserName("testuser-" + UUID.randomUUID()).build();
+    final UserDto userDto = UserDto.builder().withUserName(TestDataUtils.makeUserName()).build();
     final String userResponse = mockMvc.perform(post("/api/mission-control/v1/users")
             .contentType(MediaType.APPLICATION_JSON)
             .content(jsonMapper.writeValueAsString(userDto)))
@@ -191,7 +192,7 @@ public class TaskControllerIntTest extends IntegrationTestBase {
   void update_task_assigned_user_ok() throws Exception {
     // 1. Create Project
     final ProjectDto projectDto = ProjectDto.builder()
-        .withName("Project Update " + UUID.randomUUID())
+        .withName(TestDataUtils.makeProjectName())
         .withPrefix("UPD" + UUID.randomUUID().toString().substring(0, 4))
         .withStatus(MissionStatus.BACKLOG)
         .build();
@@ -217,7 +218,7 @@ public class TaskControllerIntTest extends IntegrationTestBase {
     final TaskDto createdTask = jsonMapper.readValue(taskResponse, TaskDto.class);
 
     // 3. Create User
-    final UserDto userDto = UserDto.builder().withUserName("updateuser-" + UUID.randomUUID())
+    final UserDto userDto = UserDto.builder().withUserName(TestDataUtils.makeUserName())
         .build();
     final String userResponse = mockMvc.perform(post("/api/mission-control/v1/users")
             .contentType(MediaType.APPLICATION_JSON)
@@ -248,7 +249,7 @@ public class TaskControllerIntTest extends IntegrationTestBase {
   void move_task_to_new_status_ok() throws Exception {
     // 1. Create Project
     final ProjectDto projectDto = ProjectDto.builder()
-        .withName("Project Move " + UUID.randomUUID())
+        .withName(TestDataUtils.makeProjectName())
         .withPrefix("MOVE" + UUID.randomUUID().toString().substring(0, 4))
         .withStatus(MissionStatus.BACKLOG)
         .build();
@@ -287,7 +288,7 @@ public class TaskControllerIntTest extends IntegrationTestBase {
   void create_task_with_assigned_user_ok() throws Exception {
     // 1. Create Project
     final ProjectDto projectDto = ProjectDto.builder()
-        .withName("Project with assigned task " + UUID.randomUUID())
+        .withName(TestDataUtils.makeProjectName())
         .withPrefix("ATSK" + UUID.randomUUID().toString().substring(0, 4))
         .withStatus(MissionStatus.BACKLOG)
         .build();
@@ -299,7 +300,7 @@ public class TaskControllerIntTest extends IntegrationTestBase {
     final ProjectDto createdProject = jsonMapper.readValue(projectResponse, ProjectDto.class);
 
     // 2. Create User
-    final UserDto userDto = UserDto.builder().withUserName("assignee-" + UUID.randomUUID()).build();
+    final UserDto userDto = UserDto.builder().withUserName(TestDataUtils.makeUserName()).build();
     final String userResponse = mockMvc.perform(post("/api/mission-control/v1/users")
             .contentType(MediaType.APPLICATION_JSON)
             .content(jsonMapper.writeValueAsString(userDto)))
@@ -330,7 +331,7 @@ public class TaskControllerIntTest extends IntegrationTestBase {
   void task_blocked_status_validation() throws Exception {
     // 1. Create Project
     final ProjectDto projectDto = ProjectDto.builder()
-        .withName("Project for Task " + UUID.randomUUID())
+        .withName(TestDataUtils.makeProjectName())
         .withPrefix("BLK" + UUID.randomUUID().toString().substring(0, 4))
         .withStatus(MissionStatus.BACKLOG)
         .build();
@@ -402,7 +403,7 @@ public class TaskControllerIntTest extends IntegrationTestBase {
   void get_tasks_by_user_ok() throws Exception {
     // 1. Create Project
     final ProjectDto projectDto = ProjectDto.builder()
-        .withName("Project for search tasks " + UUID.randomUUID())
+        .withName(TestDataUtils.makeProjectName())
         .withPrefix("SRCH" + UUID.randomUUID().toString().substring(0, 4))
         .withStatus(MissionStatus.BACKLOG)
         .build();
@@ -414,7 +415,7 @@ public class TaskControllerIntTest extends IntegrationTestBase {
     final ProjectDto createdProject = jsonMapper.readValue(projectResponse, ProjectDto.class);
 
     // 2. Create User
-    final UserDto userDto = UserDto.builder().withUserName("task-search-user-" + UUID.randomUUID())
+    final UserDto userDto = UserDto.builder().withUserName(TestDataUtils.makeUserName())
         .build();
     final String userResponse = mockMvc.perform(post("/api/mission-control/v1/users")
             .contentType(MediaType.APPLICATION_JSON)

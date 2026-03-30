@@ -13,6 +13,7 @@ import com.gambit.labs.mission.control.dto.ProjectDto;
 import com.gambit.labs.mission.control.dto.TaskDto;
 import com.gambit.labs.mission.control.dto.UserDto;
 import com.gambit.labs.mission.control.exception.ExceptionResponse;
+import com.gambit.labs.mission.control.utils.TestDataUtils;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -23,7 +24,7 @@ public class ProjectControllerIntTest extends IntegrationTestBase {
   void project_lifecycle_ok() throws Exception {
     // 1. Create Project
     final ProjectDto projectDto = ProjectDto.builder()
-        .withName("Test Project-" + java.util.UUID.randomUUID())
+        .withName(TestDataUtils.makeProjectName())
         .withDescription("Test Description")
         .withPrefix("PRJ" + java.util.UUID.randomUUID().toString().substring(0, 4))
         .withStatus(MissionStatus.BACKLOG)
@@ -58,7 +59,7 @@ public class ProjectControllerIntTest extends IntegrationTestBase {
   void delete_project_with_tasks_fails() throws Exception {
     // 1. Create Project
     final ProjectDto projectDto = ProjectDto.builder()
-        .withName("Test Project with Tasks-" + java.util.UUID.randomUUID())
+        .withName(TestDataUtils.makeProjectName())
         .withPrefix("TASK" + java.util.UUID.randomUUID().toString().substring(0, 4))
         .withStatus(MissionStatus.BACKLOG)
         .build();
@@ -98,7 +99,7 @@ public class ProjectControllerIntTest extends IntegrationTestBase {
   void assign_user_to_project_ok() throws Exception {
     // 1. Create Project
     final ProjectDto projectDto = ProjectDto.builder()
-        .withName("Project to assign-" + java.util.UUID.randomUUID())
+        .withName(TestDataUtils.makeProjectName())
         .withPrefix("ASGN" + java.util.UUID.randomUUID().toString().substring(0, 4))
         .withStatus(MissionStatus.BACKLOG)
         .build();
@@ -111,7 +112,7 @@ public class ProjectControllerIntTest extends IntegrationTestBase {
 
     // 2. Create User
     final UserDto userDto = UserDto.builder()
-        .withUserName("project-assignee-" + java.util.UUID.randomUUID()).build();
+        .withUserName(TestDataUtils.makeUserName()).build();
     final String userResponse = mockMvc.perform(post("/api/mission-control/v1/users")
             .contentType(MediaType.APPLICATION_JSON)
             .content(jsonMapper.writeValueAsString(userDto)))
@@ -134,7 +135,7 @@ public class ProjectControllerIntTest extends IntegrationTestBase {
   void create_project_with_assigned_user_ok() throws Exception {
     // 1. Create User
     final UserDto userDto = UserDto.builder()
-        .withUserName("initial-assignee-" + java.util.UUID.randomUUID()).build();
+        .withUserName(TestDataUtils.makeUserName()).build();
     final String userResponse = mockMvc.perform(post("/api/mission-control/v1/users")
             .contentType(MediaType.APPLICATION_JSON)
             .content(jsonMapper.writeValueAsString(userDto)))
@@ -144,7 +145,7 @@ public class ProjectControllerIntTest extends IntegrationTestBase {
 
     // 2. Create Project with Assigned User
     final ProjectDto projectDto = ProjectDto.builder()
-        .withName("Initial Project-" + java.util.UUID.randomUUID())
+        .withName(TestDataUtils.makeProjectName())
         .withPrefix("INIT" + java.util.UUID.randomUUID().toString().substring(0, 4))
         .withAssignedUserId(createdUser.getId())
         .withStatus(MissionStatus.BACKLOG)
@@ -164,7 +165,7 @@ public class ProjectControllerIntTest extends IntegrationTestBase {
   void move_project_to_new_status_ok() throws Exception {
     // 1. Create Project
     final ProjectDto projectDto = ProjectDto.builder()
-        .withName("Project to move-" + java.util.UUID.randomUUID())
+        .withName(TestDataUtils.makeProjectName())
         .withPrefix("MOVE" + java.util.UUID.randomUUID().toString().substring(0, 4))
         .withStatus(MissionStatus.BACKLOG)
         .build();
@@ -189,7 +190,7 @@ public class ProjectControllerIntTest extends IntegrationTestBase {
   void create_project_with_status_ok() throws Exception {
     // 1. Create Project with READY status
     final ProjectDto projectDto = ProjectDto.builder()
-        .withName("Ready Project-" + java.util.UUID.randomUUID())
+        .withName(TestDataUtils.makeProjectName())
         .withPrefix("RDY" + java.util.UUID.randomUUID().toString().substring(0, 4))
         .withStatus(MissionStatus.READY)
         .build();
@@ -208,7 +209,7 @@ public class ProjectControllerIntTest extends IntegrationTestBase {
   void project_blocked_status_validation() throws Exception {
     // 1. Create Project with BLOCKED status without reason - should fail (Conflict)
     final ProjectDto projectDto = ProjectDto.builder()
-        .withName("Blocked Project-" + java.util.UUID.randomUUID())
+        .withName(TestDataUtils.makeProjectName())
         .withPrefix("BL1" + java.util.UUID.randomUUID().toString().substring(0, 3))
         .withStatus(MissionStatus.BLOCKED)
         .build();
@@ -219,7 +220,7 @@ public class ProjectControllerIntTest extends IntegrationTestBase {
 
     // 2. Create Project with BLOCKED status with reason - should succeed
     final ProjectDto projectWithReasonDto = ProjectDto.builder()
-        .withName("Blocked Project 2-" + java.util.UUID.randomUUID())
+        .withName(TestDataUtils.makeProjectName())
         .withPrefix("BL2" + java.util.UUID.randomUUID().toString().substring(0, 3))
         .withStatus(MissionStatus.BLOCKED)
         .withBlockedReason("Need more coffee")
@@ -268,7 +269,7 @@ public class ProjectControllerIntTest extends IntegrationTestBase {
   void get_projects_by_user_ok() throws Exception {
     // 1. Create User
     final UserDto userDto = UserDto.builder()
-        .withUserName("project-search-user-" + java.util.UUID.randomUUID()).build();
+        .withUserName(TestDataUtils.makeUserName()).build();
     final String userResponse = mockMvc.perform(post("/api/mission-control/v1/users")
             .contentType(MediaType.APPLICATION_JSON)
             .content(jsonMapper.writeValueAsString(userDto)))
@@ -277,8 +278,8 @@ public class ProjectControllerIntTest extends IntegrationTestBase {
     final UserDto createdUser = jsonMapper.readValue(userResponse, UserDto.class);
 
     // 2. Create Projects assigned to user
-    final String p1Name = "Project 1-" + java.util.UUID.randomUUID();
-    final String p2Name = "Project 2-" + java.util.UUID.randomUUID();
+    final String p1Name = TestDataUtils.makeProjectName();
+    final String p2Name = TestDataUtils.makeProjectName();
     final ProjectDto project1 = ProjectDto.builder().withName(p1Name)
         .withPrefix("P1" + java.util.UUID.randomUUID().toString().substring(0, 2))
         .withAssignedUserId(createdUser.getId())
@@ -290,7 +291,7 @@ public class ProjectControllerIntTest extends IntegrationTestBase {
         .withStatus(MissionStatus.BACKLOG)
         .build();
     final ProjectDto project3 = ProjectDto.builder()
-        .withName("Project 3-" + java.util.UUID.randomUUID())
+        .withName(TestDataUtils.makeProjectName())
         .withPrefix("P3" + java.util.UUID.randomUUID().toString().substring(0, 2))
         .withStatus(MissionStatus.BACKLOG)
         .build();

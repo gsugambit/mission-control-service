@@ -2,15 +2,18 @@ package com.gambit.labs.mission.control.controller;
 
 import com.gambit.labs.mission.control.dto.TaskCommentCreateDto;
 import com.gambit.labs.mission.control.dto.TaskCommentDto;
+import com.gambit.labs.mission.control.dto.TaskCommentUpdateDto;
 import com.gambit.labs.mission.control.service.TaskCommentService;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -35,5 +38,21 @@ public class TaskCommentController {
   @GetMapping
   public List<TaskCommentDto> getComments(@PathVariable final UUID taskId) {
     return taskCommentService.getCommentsForTask(taskId);
+  }
+
+  @PutMapping("/{commentId}")
+  public TaskCommentDto updateComment(
+      @PathVariable final UUID taskId,
+      @PathVariable final UUID commentId,
+      @RequestBody final TaskCommentUpdateDto updateDto) {
+    return taskCommentService.updateComment(taskId, commentId, updateDto);
+  }
+
+  @DeleteMapping("/{commentId}")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void deleteComment(
+      @PathVariable final UUID taskId,
+      @PathVariable final UUID commentId) {
+    taskCommentService.deleteComment(taskId, commentId);
   }
 }

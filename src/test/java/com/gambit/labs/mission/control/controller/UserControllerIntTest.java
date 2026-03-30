@@ -10,6 +10,7 @@ import com.gambit.labs.mission.control.IntegrationTestBase;
 import com.gambit.labs.mission.control.dao.MissionStatus;
 import com.gambit.labs.mission.control.dto.ProjectDto;
 import com.gambit.labs.mission.control.dto.UserDto;
+import com.gambit.labs.mission.control.utils.TestDataUtils;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -20,7 +21,7 @@ public class UserControllerIntTest extends IntegrationTestBase {
   @Test
   void create_user_ok() throws Exception {
     // given
-    final String userName = "testuser-" + java.util.UUID.randomUUID();
+    final String userName = TestDataUtils.makeUserName();
     final UserDto userDto = UserDto.builder()
         .withUserName(userName)
         .build();
@@ -44,7 +45,7 @@ public class UserControllerIntTest extends IntegrationTestBase {
   @Test
   void get_all_users_ok() throws Exception {
     // given
-    final String userName = "testuser-" + java.util.UUID.randomUUID();
+    final String userName = TestDataUtils.makeUserName();
     final UserDto userDto = UserDto.builder()
         .withUserName(userName)
         .build();
@@ -70,7 +71,7 @@ public class UserControllerIntTest extends IntegrationTestBase {
   void delete_user_ok() throws Exception {
     // given
     final UserDto userDto = UserDto.builder()
-        .withUserName("deleteuser-" + java.util.UUID.randomUUID())
+        .withUserName(TestDataUtils.makeUserName())
         .build();
     final String content = jsonMapper.writeValueAsString(userDto);
     final String responseContent = mockMvc.perform(post("/api/mission-control/v1/users")
@@ -89,7 +90,7 @@ public class UserControllerIntTest extends IntegrationTestBase {
   void delete_user_conflict_when_assigned() throws Exception {
     // given
     final UserDto userDto = UserDto.builder()
-        .withUserName("assigneduser-" + java.util.UUID.randomUUID())
+        .withUserName(TestDataUtils.makeUserName())
         .build();
     final String userContent = jsonMapper.writeValueAsString(userDto);
     final String userResponse = mockMvc.perform(post("/api/mission-control/v1/users")
@@ -100,7 +101,7 @@ public class UserControllerIntTest extends IntegrationTestBase {
     final UserDto createdUser = jsonMapper.readValue(userResponse, UserDto.class);
 
     final ProjectDto projectDto = ProjectDto.builder()
-        .withName("proj-for-user-" + java.util.UUID.randomUUID())
+        .withName(TestDataUtils.makeProjectName())
         .withPrefix("USR" + java.util.UUID.randomUUID().toString().substring(0, 4))
         .withAssignedUserId(createdUser.getId())
         .withStatus(MissionStatus.BACKLOG)

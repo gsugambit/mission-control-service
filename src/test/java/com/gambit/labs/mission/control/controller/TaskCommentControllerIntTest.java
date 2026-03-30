@@ -1,8 +1,10 @@
 package com.gambit.labs.mission.control.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.gambit.labs.mission.control.IntegrationTestBase;
@@ -10,8 +12,10 @@ import com.gambit.labs.mission.control.dao.MissionStatus;
 import com.gambit.labs.mission.control.dto.ProjectDto;
 import com.gambit.labs.mission.control.dto.TaskCommentCreateDto;
 import com.gambit.labs.mission.control.dto.TaskCommentDto;
+import com.gambit.labs.mission.control.dto.TaskCommentUpdateDto;
 import com.gambit.labs.mission.control.dto.TaskDto;
 import com.gambit.labs.mission.control.dto.UserDto;
+import com.gambit.labs.mission.control.utils.TestDataUtils;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,7 +31,7 @@ class TaskCommentControllerIntTest extends IntegrationTestBase {
   @BeforeEach
   void setUp() throws Exception {
     final UserDto userDto = UserDto.builder()
-        .withUserName("testuser-" + UUID.randomUUID())
+        .withUserName(TestDataUtils.makeUserName())
         .build();
     final String userResponse = mockMvc.perform(post("/api/mission-control/v1/users")
             .contentType(MediaType.APPLICATION_JSON)
@@ -37,7 +41,7 @@ class TaskCommentControllerIntTest extends IntegrationTestBase {
     userId = jsonMapper.readValue(userResponse, UserDto.class).getId();
 
     final ProjectDto projectDto = ProjectDto.builder()
-        .withName("Test Project-" + java.util.UUID.randomUUID())
+        .withName(TestDataUtils.makeProjectName())
         .withPrefix("TP" + java.util.UUID.randomUUID().toString().substring(0, 4))
         .withStatus(MissionStatus.BACKLOG)
         .build();
@@ -141,6 +145,98 @@ class TaskCommentControllerIntTest extends IntegrationTestBase {
     mockMvc.perform(post("/api/mission-control/v1/tasks/{taskId}/comments", taskId)
             .contentType(MediaType.APPLICATION_JSON)
             .content(jsonMapper.writeValueAsString(createDto)))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  void update_comment_ok() throws Exception {
+    // given
+    final TaskCommentCreateDto createDto = TaskCommentCreateDto.builder()
+        .withUserId(userId)
+        .withComment("Original comment")
+        .build();
+    final String addResponse = mockMvc.perform(
+            post("/api/mission-control/v1/tasks/{taskId}/comments", taskId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(createDto)))
+        .andExpect(status().isCreated())
+        .andReturn().getResponse().getContentAsString();
+    final UUID commentId = jsonMapper.readValue(addResponse, TaskCommentDto.class).getId();
+
+    final TaskCommentUpdateDto updateDto = TaskCommentUpdateDto.builder()
+        .withComment("Updated comment")
+        .build();
+
+    // when
+    final String updateResponse = mockMvc.perform(
+            put("/api/mission-control/v1/tasks/{taskId}/comments/{commentId}", taskId, commentId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(updateDto)))
+        .andExpect(status().isOk())
+        .andReturn().getResponse().getContentAsString();
+
+    // then
+    final TaskCommentDto updatedComment = jsonMapper.readValue(updateResponse,
+        TaskCommentDto.class);
+    assertThat(updatedComment.getComment()).isEqualTo("Updated comment");
+    assertThat(updatedComment.getId()).isEqualTo(commentId);
+  }
+
+  @Test
+  void delete_comment_ok() throws Exception {
+    // given
+    final TaskCommentCreateDto createDto = TaskCommentCreateDto.builder()
+        .withUserId(userId)
+        .withComment("Comment to delete")
+        .build();
+    final String addResponse = mockMvc.perform(
+            post("/api/mission-control/v1/tasks/{taskId}/comments", taskId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(createDto)))
+        .andExpect(status().isCreated())
+        .andReturn().getResponse().getContentAsString();
+    final UUID commentId = jsonMapper.readValue(addResponse, TaskCommentDto.class).getId();
+
+    // when
+    mockMvc.perform(delete("/api/mission-control/v1/tasks/{taskId}/comments/{commentId}", taskId,
+            commentId))
+        .andExpect(status().isNoContent());
+
+    // then
+    final MvcResult result = mockMvc.perform(
+            get("/api/mission-control/v1/tasks/{taskId}/comments", taskId))
+        .andExpect(status().isOk())
+        .andReturn();
+    final List<TaskCommentDto> comments = jsonMapper.readValue(
+        result.getResponse().getContentAsString(),
+        jsonMapper.getTypeFactory().constructCollectionType(List.class, TaskCommentDto.class));
+    assertThat(comments).noneMatch(c -> c.getId().equals(commentId));
+  }
+
+  @Test
+  void update_comment_wrong_task_ko() throws Exception {
+    // given
+    final TaskCommentCreateDto createDto = TaskCommentCreateDto.builder()
+        .withUserId(userId)
+        .withComment("Original comment")
+        .build();
+    final String addResponse = mockMvc.perform(
+            post("/api/mission-control/v1/tasks/{taskId}/comments", taskId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonMapper.writeValueAsString(createDto)))
+        .andExpect(status().isCreated())
+        .andReturn().getResponse().getContentAsString();
+    final UUID commentId = jsonMapper.readValue(addResponse, TaskCommentDto.class).getId();
+
+    final TaskCommentUpdateDto updateDto = TaskCommentUpdateDto.builder()
+        .withComment("Updated comment")
+        .build();
+
+    // when / then
+    mockMvc.perform(put("/api/mission-control/v1/tasks/{taskId}/comments/{commentId}",
+            UUID.randomUUID(), commentId)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(jsonMapper.writeValueAsString(updateDto)))
         .andExpect(status().isBadRequest());
   }
 }

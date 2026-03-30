@@ -50,6 +50,10 @@ Service.
 - `userId`: UUID - ID of the user creating the comment.
 - `comment`: String - The comment text.
 
+### TaskCommentUpdateDto
+
+- `comment`: String - The updated comment text.
+
 ### TaskCommentDto
 
 - `id`: UUID - Unique identifier for the comment.
@@ -263,3 +267,22 @@ Endpoints for managing comments on tasks.
 - **Input**: `taskId`: Path variable (UUID)
 - **Output**: `List<TaskCommentDto>` (JSON)
 - **Description**: Retrieves all comments for a specific task, ordered by creation date (ascending).
+
+### Update Comment
+
+- **Path**: `PUT /api/mission-control/v1/tasks/{taskId}/comments/{commentId}`
+- **Input**:
+  - `taskId`: Path variable (UUID)
+  - `commentId`: Path variable (UUID)
+  - `TaskCommentUpdateDto`: Request body (JSON)
+- **Output**: `TaskCommentDto` (JSON)
+- **Description**: Updates the text of an existing comment.
+
+### Delete Comment
+
+- **Path**: `DELETE /api/mission-control/v1/tasks/{taskId}/comments/{commentId}`
+- **Input**:
+  - `taskId`: Path variable (UUID)
+  - `commentId`: Path variable (UUID)
+- **Output**: None (HTTP 204 No Content)
+- **Description**: Deletes a comment.

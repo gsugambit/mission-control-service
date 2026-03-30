@@ -5,6 +5,7 @@ import com.gambit.labs.mission.control.dao.TaskDao;
 import com.gambit.labs.mission.control.dao.UserDao;
 import com.gambit.labs.mission.control.dto.TaskCommentCreateDto;
 import com.gambit.labs.mission.control.dto.TaskCommentDto;
+import com.gambit.labs.mission.control.dto.TaskCommentUpdateDto;
 import com.gambit.labs.mission.control.exception.InvalidRequestException;
 import com.gambit.labs.mission.control.exception.NotFoundException;
 import com.gambit.labs.mission.control.repository.TaskCommentRepository;
@@ -65,6 +66,38 @@ public class TaskCommentService {
     return taskCommentRepository.findAllByTaskIdOrderByDateCreatedAsc(taskId).stream()
         .map(this::mapToDto)
         .collect(Collectors.toList());
+  }
+
+  public TaskCommentDto updateComment(final UUID taskId, final UUID commentId,
+      final TaskCommentUpdateDto updateDto) {
+    if (!StringUtils.hasText(updateDto.getComment())) {
+      throw new InvalidRequestException("Comment text is required");
+    }
+
+    final TaskCommentDao commentDao = taskCommentRepository.findById(commentId)
+        .orElseThrow(() -> new NotFoundException("Comment not found with id: " + commentId));
+
+    if (!commentDao.getTask().getId().equals(taskId)) {
+      throw new InvalidRequestException("Comment does not belong to the specified task");
+    }
+
+    commentDao.setComment(updateDto.getComment());
+    final TaskCommentDao updatedComment = taskCommentRepository.save(commentDao);
+    LOGGER.info("Updated comment with id: {} for task with id: {}", commentId, taskId);
+
+    return mapToDto(updatedComment);
+  }
+
+  public void deleteComment(final UUID taskId, final UUID commentId) {
+    final TaskCommentDao commentDao = taskCommentRepository.findById(commentId)
+        .orElseThrow(() -> new NotFoundException("Comment not found with id: " + commentId));
+
+    if (!commentDao.getTask().getId().equals(taskId)) {
+      throw new InvalidRequestException("Comment does not belong to the specified task");
+    }
+
+    taskCommentRepository.delete(commentDao);
+    LOGGER.info("Deleted comment with id: {} for task with id: {}", commentId, taskId);
   }
 
   private TaskCommentDto mapToDto(final TaskCommentDao commentDao) {
