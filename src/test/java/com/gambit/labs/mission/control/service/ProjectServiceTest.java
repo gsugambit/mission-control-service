@@ -17,6 +17,7 @@ import com.gambit.labs.mission.control.exception.InvalidRequestException;
 import com.gambit.labs.mission.control.repository.ProjectRepository;
 import com.gambit.labs.mission.control.repository.TaskRepository;
 import com.gambit.labs.mission.control.repository.UserRepository;
+import com.gambit.labs.mission.control.utils.TestDataUtils;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -44,7 +45,7 @@ class ProjectServiceTest {
   @Test
   void create_project_with_duplicate_name_fails() {
     // given
-    final String projectName = "Unique Project";
+    final String projectName = TestDataUtils.makeProjectName();
     final ProjectDto projectDto = ProjectDto.builder()
         .withName(projectName)
         .withPrefix("PRJ")
@@ -78,7 +79,7 @@ class ProjectServiceTest {
   void create_project_without_prefix_fails() {
     // given
     final ProjectDto projectDto = ProjectDto.builder()
-        .withName("Test Project")
+        .withName(TestDataUtils.makeProjectName())
         .withPrefix(null)
         .build();
 
@@ -94,8 +95,8 @@ class ProjectServiceTest {
   void update_project_with_duplicate_name_fails() {
     // given
     final UUID projectId = UUID.randomUUID();
-    final String existingName = "Project A";
-    final String newName = "Project B";
+    final String existingName = TestDataUtils.makeProjectName();
+    final String newName = TestDataUtils.makeProjectName();
     final ProjectDao existingProject = ProjectDao.builder()
         .withId(projectId)
         .withName(existingName)
@@ -120,7 +121,7 @@ class ProjectServiceTest {
     final UUID projectId = UUID.randomUUID();
     final ProjectDao existingProject = ProjectDao.builder()
         .withId(projectId)
-        .withName("Existing Project")
+        .withName(TestDataUtils.makeProjectName())
         .withPrefix("OLD")
         .build();
 
@@ -142,7 +143,7 @@ class ProjectServiceTest {
   void create_project_without_status_fails() {
     // given
     final ProjectDto projectDto = ProjectDto.builder()
-        .withName("No Status Project")
+        .withName(TestDataUtils.makeProjectName())
         .withPrefix("PRJ")
         .withStatus(null)
         .build();
@@ -158,7 +159,7 @@ class ProjectServiceTest {
   @Test
   void create_project_ok() {
     // given
-    final String projectName = "New Project";
+    final String projectName = TestDataUtils.makeProjectName();
     final String prefix = "PRJ";
     final ProjectDto projectDto = ProjectDto.builder()
         .withName(projectName)
@@ -173,7 +174,7 @@ class ProjectServiceTest {
         .build();
 
     when(projectRepository.existsByName(projectName)).thenReturn(false);
-    when(projectRepository.save(any(ProjectDao.class))).thenReturn(savedProject);
+    when(projectRepository.saveAndFlush(any(ProjectDao.class))).thenReturn(savedProject);
 
     // when
     final ProjectDto result = projectService.createProject(projectDto);
@@ -182,7 +183,7 @@ class ProjectServiceTest {
     assertNotNull(result.getId());
     assertEquals(projectName, result.getName());
     assertEquals(MissionStatus.BACKLOG, result.getStatus());
-    verify(projectRepository).save(any(ProjectDao.class));
+    verify(projectRepository).saveAndFlush(any(ProjectDao.class));
   }
 
   @Test
@@ -191,7 +192,7 @@ class ProjectServiceTest {
     final UUID projectId = UUID.randomUUID();
     final ProjectDao projectDao = ProjectDao.builder()
         .withId(projectId)
-        .withName("Project Name")
+        .withName(TestDataUtils.makeProjectName())
         .withStatus(MissionStatus.BACKLOG)
         .build();
 
@@ -203,15 +204,17 @@ class ProjectServiceTest {
     // then
     assertNotNull(result);
     assertEquals(projectId, result.getId());
-    assertEquals("Project Name", result.getName());
+    assertEquals(projectDao.getName(), result.getName());
   }
 
   @Test
   void get_all_projects_ok() {
     // given
     final List<ProjectDao> projects = List.of(
-        ProjectDao.builder().withId(UUID.randomUUID()).withName("Project 1").build(),
-        ProjectDao.builder().withId(UUID.randomUUID()).withName("Project 2").build()
+        ProjectDao.builder().withId(UUID.randomUUID()).withName(TestDataUtils.makeProjectName())
+            .build(),
+        ProjectDao.builder().withId(UUID.randomUUID()).withName(TestDataUtils.makeProjectName())
+            .build()
     );
 
     when(projectRepository.findAll()).thenReturn(projects);
@@ -229,24 +232,24 @@ class ProjectServiceTest {
     final UUID projectId = UUID.randomUUID();
     final ProjectDao existingProject = ProjectDao.builder()
         .withId(projectId)
-        .withName("Old Name")
+        .withName(TestDataUtils.makeProjectName())
         .withStatus(MissionStatus.BACKLOG)
         .build();
     final ProjectDto updateRequest = ProjectDto.builder()
-        .withName("New Name")
+        .withName(TestDataUtils.makeProjectName())
         .withPrefix("NEW")
         .withStatus(MissionStatus.IN_PROGRESS)
         .build();
 
     when(projectRepository.findById(projectId)).thenReturn(Optional.of(existingProject));
-    when(projectRepository.existsByName("New Name")).thenReturn(false);
+    when(projectRepository.existsByName(updateRequest.getName())).thenReturn(false);
     when(projectRepository.save(any(ProjectDao.class))).thenReturn(existingProject);
 
     // when
     final ProjectDto result = projectService.updateProject(projectId, updateRequest);
 
     // then
-    assertEquals("New Name", result.getName());
+    assertEquals(updateRequest.getName(), result.getName());
     assertEquals(MissionStatus.IN_PROGRESS, result.getStatus());
     verify(projectRepository).save(existingProject);
   }

@@ -15,6 +15,7 @@ import com.gambit.labs.mission.control.exception.InvalidRequestException;
 import com.gambit.labs.mission.control.repository.ProjectRepository;
 import com.gambit.labs.mission.control.repository.TaskRepository;
 import com.gambit.labs.mission.control.repository.UserRepository;
+import com.gambit.labs.mission.control.utils.TestDataUtils;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -42,7 +43,7 @@ class UserServiceTest {
   @Test
   void create_user_with_duplicate_username_fails() {
     // given
-    final String userName = "uniqueuser";
+    final String userName = TestDataUtils.makeUserName();
     final UserDto userDto = UserDto.builder().withUserName(userName).build();
     when(userRepository.existsByUserName(userName)).thenReturn(true);
 
@@ -71,7 +72,7 @@ class UserServiceTest {
   @Test
   void create_user_ok() {
     // given
-    final String userName = "newuser";
+    final String userName = TestDataUtils.makeUserName();
     final UserDto userDto = UserDto.builder().withUserName(userName).build();
     final UserDao savedUser = UserDao.builder()
         .withId(UUID.randomUUID())
@@ -94,8 +95,10 @@ class UserServiceTest {
   void get_all_users_ok() {
     // given
     final List<UserDao> users = List.of(
-        UserDao.builder().withId(UUID.randomUUID()).withUserName("user1").build(),
-        UserDao.builder().withId(UUID.randomUUID()).withUserName("user2").build()
+        UserDao.builder().withId(UUID.randomUUID()).withUserName(TestDataUtils.makeUserName())
+            .build(),
+        UserDao.builder().withId(UUID.randomUUID()).withUserName(TestDataUtils.makeUserName())
+            .build()
     );
 
     when(userRepository.findAll()).thenReturn(users);

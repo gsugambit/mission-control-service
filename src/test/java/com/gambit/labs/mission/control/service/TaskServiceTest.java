@@ -160,6 +160,53 @@ class TaskServiceTest {
   }
 
   @Test
+  void get_task_not_found_fails() {
+    // given
+    final UUID taskId = UUID.randomUUID();
+    when(taskRepository.findById(taskId)).thenReturn(Optional.empty());
+
+    // when / then
+    assertThrows(com.gambit.labs.mission.control.exception.NotFoundException.class,
+        () -> taskService.getTask(taskId));
+  }
+
+  @Test
+  void get_task_by_code_ok() {
+    // given
+    final String taskCode = "PRJ-1";
+    final UUID taskId = UUID.randomUUID();
+    final ProjectDao projectDao = ProjectDao.builder().withId(UUID.randomUUID()).build();
+    final TaskDao taskDao = TaskDao.builder()
+        .withId(taskId)
+        .withProject(projectDao)
+        .withName("Task Name")
+        .withStatus(MissionStatus.BACKLOG)
+        .withTaskCode(taskCode)
+        .build();
+
+    when(taskRepository.findByTaskCode(taskCode)).thenReturn(Optional.of(taskDao));
+
+    // when
+    final TaskDto result = taskService.getTaskByCode(taskCode);
+
+    // then
+    assertNotNull(result);
+    assertEquals(taskId, result.getId());
+    assertEquals(taskCode, result.getTaskCode());
+  }
+
+  @Test
+  void get_task_by_code_not_found_fails() {
+    // given
+    final String taskCode = "NON-EXISTENT";
+    when(taskRepository.findByTaskCode(taskCode)).thenReturn(Optional.empty());
+
+    // when / then
+    assertThrows(com.gambit.labs.mission.control.exception.NotFoundException.class,
+        () -> taskService.getTaskByCode(taskCode));
+  }
+
+  @Test
   void get_all_tasks_ok() {
     // given
     final ProjectDao projectDao = ProjectDao.builder().withId(UUID.randomUUID()).build();
@@ -205,6 +252,18 @@ class TaskServiceTest {
   }
 
   @Test
+  void update_task_not_found_fails() {
+    // given
+    final UUID taskId = UUID.randomUUID();
+    final TaskDto updateRequest = TaskDto.builder().withName("New Name").build();
+    when(taskRepository.findById(taskId)).thenReturn(Optional.empty());
+
+    // when / then
+    assertThrows(com.gambit.labs.mission.control.exception.NotFoundException.class,
+        () -> taskService.updateTask(taskId, updateRequest));
+  }
+
+  @Test
   void delete_task_ok() {
     // given
     final UUID taskId = UUID.randomUUID();
@@ -215,6 +274,17 @@ class TaskServiceTest {
 
     // then
     verify(taskRepository).deleteById(taskId);
+  }
+
+  @Test
+  void delete_task_not_found_fails() {
+    // given
+    final UUID taskId = UUID.randomUUID();
+    when(taskRepository.existsById(taskId)).thenReturn(false);
+
+    // when / then
+    assertThrows(com.gambit.labs.mission.control.exception.NotFoundException.class,
+        () -> taskService.deleteTask(taskId));
   }
 
   @Test
@@ -258,6 +328,24 @@ class TaskServiceTest {
     // then
     assertEquals(MissionStatus.DONE, result.getStatus());
     verify(taskRepository).save(taskDao);
+  }
+
+  @Test
+  void update_task_status_blocked_without_reason_fails() {
+    // given
+    final UUID taskId = UUID.randomUUID();
+    final ProjectDao projectDao = ProjectDao.builder().withId(UUID.randomUUID()).build();
+    final TaskDao taskDao = TaskDao.builder()
+        .withId(taskId)
+        .withProject(projectDao)
+        .withStatus(MissionStatus.BACKLOG)
+        .build();
+
+    when(taskRepository.findById(taskId)).thenReturn(Optional.of(taskDao));
+
+    // when / then
+    assertThrows(com.gambit.labs.mission.control.exception.DataViolationException.class,
+        () -> taskService.updateTaskStatus(taskId, MissionStatus.BLOCKED, null));
   }
 
   @Test

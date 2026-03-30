@@ -13,6 +13,7 @@ import com.gambit.labs.mission.control.dto.ProjectDto;
 import com.gambit.labs.mission.control.dto.TaskDto;
 import com.gambit.labs.mission.control.dto.UserDto;
 import com.gambit.labs.mission.control.exception.ExceptionResponse;
+import com.gambit.labs.mission.control.utils.TestDataUtils;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -23,9 +24,9 @@ public class ProjectControllerIntTest extends IntegrationTestBase {
   void project_lifecycle_ok() throws Exception {
     // 1. Create Project
     final ProjectDto projectDto = ProjectDto.builder()
-        .withName("Test Project")
+        .withName(TestDataUtils.makeProjectName())
         .withDescription("Test Description")
-        .withPrefix("PRJ")
+        .withPrefix("PRJ" + java.util.UUID.randomUUID().toString().substring(0, 4))
         .withStatus(MissionStatus.BACKLOG)
         .build();
 
@@ -37,8 +38,8 @@ public class ProjectControllerIntTest extends IntegrationTestBase {
 
     final ProjectDto createdProject = jsonMapper.readValue(projectResponse, ProjectDto.class);
     assertThat(createdProject.getId()).isNotNull();
-    assertThat(createdProject.getName()).isEqualTo("Test Project");
-    assertThat(createdProject.getPrefix()).isEqualTo("PRJ");
+    assertThat(createdProject.getName()).isEqualTo(projectDto.getName());
+    assertThat(createdProject.getPrefix()).isEqualTo(projectDto.getPrefix());
     assertThat(createdProject.getStatus()).isEqualTo(MissionStatus.BACKLOG);
 
     // 2. Verify Get Project
@@ -58,8 +59,8 @@ public class ProjectControllerIntTest extends IntegrationTestBase {
   void delete_project_with_tasks_fails() throws Exception {
     // 1. Create Project
     final ProjectDto projectDto = ProjectDto.builder()
-        .withName("Test Project with Tasks")
-        .withPrefix("TASK")
+        .withName(TestDataUtils.makeProjectName())
+        .withPrefix("TASK" + java.util.UUID.randomUUID().toString().substring(0, 4))
         .withStatus(MissionStatus.BACKLOG)
         .build();
 
@@ -98,8 +99,8 @@ public class ProjectControllerIntTest extends IntegrationTestBase {
   void assign_user_to_project_ok() throws Exception {
     // 1. Create Project
     final ProjectDto projectDto = ProjectDto.builder()
-        .withName("Project to assign")
-        .withPrefix("ASGN")
+        .withName(TestDataUtils.makeProjectName())
+        .withPrefix("ASGN" + java.util.UUID.randomUUID().toString().substring(0, 4))
         .withStatus(MissionStatus.BACKLOG)
         .build();
     final String projectResponse = mockMvc.perform(post("/api/mission-control/v1/projects")
@@ -110,7 +111,8 @@ public class ProjectControllerIntTest extends IntegrationTestBase {
     final ProjectDto createdProject = jsonMapper.readValue(projectResponse, ProjectDto.class);
 
     // 2. Create User
-    final UserDto userDto = UserDto.builder().withUserName("project-assignee").build();
+    final UserDto userDto = UserDto.builder()
+        .withUserName(TestDataUtils.makeUserName()).build();
     final String userResponse = mockMvc.perform(post("/api/mission-control/v1/users")
             .contentType(MediaType.APPLICATION_JSON)
             .content(jsonMapper.writeValueAsString(userDto)))
@@ -132,7 +134,8 @@ public class ProjectControllerIntTest extends IntegrationTestBase {
   @Test
   void create_project_with_assigned_user_ok() throws Exception {
     // 1. Create User
-    final UserDto userDto = UserDto.builder().withUserName("initial-assignee").build();
+    final UserDto userDto = UserDto.builder()
+        .withUserName(TestDataUtils.makeUserName()).build();
     final String userResponse = mockMvc.perform(post("/api/mission-control/v1/users")
             .contentType(MediaType.APPLICATION_JSON)
             .content(jsonMapper.writeValueAsString(userDto)))
@@ -142,8 +145,8 @@ public class ProjectControllerIntTest extends IntegrationTestBase {
 
     // 2. Create Project with Assigned User
     final ProjectDto projectDto = ProjectDto.builder()
-        .withName("Initial Project")
-        .withPrefix("INIT")
+        .withName(TestDataUtils.makeProjectName())
+        .withPrefix("INIT" + java.util.UUID.randomUUID().toString().substring(0, 4))
         .withAssignedUserId(createdUser.getId())
         .withStatus(MissionStatus.BACKLOG)
         .build();
@@ -162,8 +165,8 @@ public class ProjectControllerIntTest extends IntegrationTestBase {
   void move_project_to_new_status_ok() throws Exception {
     // 1. Create Project
     final ProjectDto projectDto = ProjectDto.builder()
-        .withName("Project to move")
-        .withPrefix("MOVE")
+        .withName(TestDataUtils.makeProjectName())
+        .withPrefix("MOVE" + java.util.UUID.randomUUID().toString().substring(0, 4))
         .withStatus(MissionStatus.BACKLOG)
         .build();
     final String projectResponse = mockMvc.perform(post("/api/mission-control/v1/projects")
@@ -187,8 +190,8 @@ public class ProjectControllerIntTest extends IntegrationTestBase {
   void create_project_with_status_ok() throws Exception {
     // 1. Create Project with READY status
     final ProjectDto projectDto = ProjectDto.builder()
-        .withName("Ready Project")
-        .withPrefix("RDY")
+        .withName(TestDataUtils.makeProjectName())
+        .withPrefix("RDY" + java.util.UUID.randomUUID().toString().substring(0, 4))
         .withStatus(MissionStatus.READY)
         .build();
 
@@ -206,8 +209,8 @@ public class ProjectControllerIntTest extends IntegrationTestBase {
   void project_blocked_status_validation() throws Exception {
     // 1. Create Project with BLOCKED status without reason - should fail (Conflict)
     final ProjectDto projectDto = ProjectDto.builder()
-        .withName("Blocked Project")
-        .withPrefix("BLK1")
+        .withName(TestDataUtils.makeProjectName())
+        .withPrefix("BL1" + java.util.UUID.randomUUID().toString().substring(0, 3))
         .withStatus(MissionStatus.BLOCKED)
         .build();
     mockMvc.perform(post("/api/mission-control/v1/projects")
@@ -217,8 +220,8 @@ public class ProjectControllerIntTest extends IntegrationTestBase {
 
     // 2. Create Project with BLOCKED status with reason - should succeed
     final ProjectDto projectWithReasonDto = ProjectDto.builder()
-        .withName("Blocked Project 2")
-        .withPrefix("BLK2")
+        .withName(TestDataUtils.makeProjectName())
+        .withPrefix("BL2" + java.util.UUID.randomUUID().toString().substring(0, 3))
         .withStatus(MissionStatus.BLOCKED)
         .withBlockedReason("Need more coffee")
         .build();
@@ -265,7 +268,8 @@ public class ProjectControllerIntTest extends IntegrationTestBase {
   @Test
   void get_projects_by_user_ok() throws Exception {
     // 1. Create User
-    final UserDto userDto = UserDto.builder().withUserName("project-search-user").build();
+    final UserDto userDto = UserDto.builder()
+        .withUserName(TestDataUtils.makeUserName()).build();
     final String userResponse = mockMvc.perform(post("/api/mission-control/v1/users")
             .contentType(MediaType.APPLICATION_JSON)
             .content(jsonMapper.writeValueAsString(userDto)))
@@ -274,19 +278,21 @@ public class ProjectControllerIntTest extends IntegrationTestBase {
     final UserDto createdUser = jsonMapper.readValue(userResponse, UserDto.class);
 
     // 2. Create Projects assigned to user
-    final ProjectDto project1 = ProjectDto.builder().withName("Project 1")
-        .withPrefix("P1")
+    final String p1Name = TestDataUtils.makeProjectName();
+    final String p2Name = TestDataUtils.makeProjectName();
+    final ProjectDto project1 = ProjectDto.builder().withName(p1Name)
+        .withPrefix("P1" + java.util.UUID.randomUUID().toString().substring(0, 2))
         .withAssignedUserId(createdUser.getId())
         .withStatus(MissionStatus.BACKLOG)
         .build();
-    final ProjectDto project2 = ProjectDto.builder().withName("Project 2")
-        .withPrefix("P2")
+    final ProjectDto project2 = ProjectDto.builder().withName(p2Name)
+        .withPrefix("P2" + java.util.UUID.randomUUID().toString().substring(0, 2))
         .withAssignedUserId(createdUser.getId())
         .withStatus(MissionStatus.BACKLOG)
         .build();
     final ProjectDto project3 = ProjectDto.builder()
-        .withName("Project 3")
-        .withPrefix("P3")
+        .withName(TestDataUtils.makeProjectName())
+        .withPrefix("P3" + java.util.UUID.randomUUID().toString().substring(0, 2))
         .withStatus(MissionStatus.BACKLOG)
         .build();
 
@@ -311,6 +317,6 @@ public class ProjectControllerIntTest extends IntegrationTestBase {
         });
     assertThat(projects).hasSize(2);
     assertThat(projects).extracting(ProjectDto::getName)
-        .containsExactlyInAnyOrder("Project 1", "Project 2");
+        .containsExactlyInAnyOrder(p1Name, p2Name);
   }
 }
